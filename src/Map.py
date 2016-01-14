@@ -10,7 +10,6 @@
 import os,sys
 import numpy as np
 from datetime import datetime
-from Toolbox.MyToolbox import MyToolbox as MTB
 
 class Map():
 	"""
