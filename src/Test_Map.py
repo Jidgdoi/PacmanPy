@@ -7,6 +7,7 @@ import os
 import unittest
 from Map import Map
 
+<<<<<<< HEAD
 # ---------------------------
 # --- Test Map
 # ---------------------------
@@ -16,6 +17,16 @@ class Test_Map( unittest.TestCase ):
 	def setUp(self):
 		self.grid = Map()
 	
+=======
+class Test_Map( unittest.TestCase ):
+
+	def setUp(self):
+		self.grid = Map()
+
+	# ---------------------------
+	# --- Test Map
+	# ---------------------------
+>>>>>>> 3f97cd8ac787b2324de231df083dc8c8651628d6
 	def test__createMap(self):
 		print '\n', self.grid
 		self.assertEqual('ok', 'ok')
