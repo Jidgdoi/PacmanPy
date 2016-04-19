@@ -13,7 +13,6 @@ CellTypeGlass = 17977
 CellTypeWall = 12701
 # --- Cell item
 CellItemNone = 19725
-<<<<<<< HEAD
 CellItemPoint = 14759
 CellItemPower = 10799
 # --- Cell character
@@ -37,9 +36,3 @@ MovementLeft = 4
 ActionDie = 666
 ActionPoint = 777
 ActionPower = 117
-=======
-CellItemPacman = 18419
-CellItemPoint = 14759
-CellItemPower = 10799
-CellItemGhost = 13012
->>>>>>> 3f97cd8ac787b2324de231df083dc8c8651628d6

@@ -1,25 +1,21 @@
 # -*- coding:utf-8 -*-
 
 # Cyril Fournier
-# 13/01/2016
+# 19/01/2016
 
 import os
 import unittest
-from Map import Map
+from Cell import Cell
 
 # ---------------------------
-# --- Test Map
+# --- Test Cell
 # ---------------------------
 
-class Test_Map( unittest.TestCase ):
+class Test_Cell( unittest.TestCase ):
 	
 	def setUp(self):
 		self.grid = Map()
-	
-	def test__createMap(self):
-		print '\n', self.grid
-		self.assertEqual('ok', 'ok')
 
 if __name__ == '__main__':
-	suite = unittest.TestLoader().loadTestsFromTestCase(Test_Map)
+	suite = unittest.TestLoader().loadTestsFromTestCase(Test_Cell)
 	unittest.TextTestRunner(verbosity=2).run(suite)
