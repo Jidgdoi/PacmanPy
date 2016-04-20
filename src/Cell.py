@@ -25,6 +25,7 @@ class Cell():
 		self.type = cellType
 		self.item = item
 		self.character = character
+		self.lAuthorizedMoves = []
 	
 	def __repr__(self):
 		t, i = MTB.getKey(globals(), [self.type, self.item])
@@ -46,6 +47,9 @@ class Cell():
 	def getCharacter(self):
 		return self.character
 	
+	def getAuthorizedMoves(self):
+		return self.lAuthorizedMoves
+	
 	# ----------------------------------
 	# --- Set functions
 	# ----------------------------------
@@ -63,6 +67,23 @@ class Cell():
 	def deleteItem(self):
 		self.item = CellItemNone
 	
+	def updateAuthorizedMoves(self, cellUpType, cellDownType, cellRightType, cellLeftType):
+		"""
+		Update the list variable 'self.lAuthorizedMove', which contain the authorized move around the cell.
+		"""
+		lMoves = list()
+		# Walls can't have authorized move
+		if self.type == CellTypeWall:
+			self.lAuthorizedMoves = lMoves
+			return
+		if cellUpType == CellTypePath: lMoves.append(MovementUp)
+		if cellDownType == CellTypePath: lMoves.append(MovementDown)
+		if cellRightType == CellTypePath: lMoves.append(MovementRight)
+		if cellLeftType == CellTypePath: lMoves.append(MovementLeft)
+		# Update list
+		self.lAuthorizedMoves = lMoves
+		return
+	
 	def toPrint(self):
 		"""
 		Return the principle GLOBAL ID to print (pacman, point, wall ...)
@@ -74,12 +95,3 @@ class Cell():
 			return self.item
 		else:
 			return self.type
-	
-	def isMovePossible(self, obj):
-		"""
-		Return True if the movement for the Pacman or Ghost is possible.
-		"""
-		if self.type == CellTypeWall: return False
-		elif self.type == CellTypeGlass and obj == CellCharacterGhost: return True
-		elif self.type == CellTypePath: return True
-		return False

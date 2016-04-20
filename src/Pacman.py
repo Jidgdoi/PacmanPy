@@ -28,11 +28,12 @@ class Pacman():
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, objMap=None, objGraphical=None, objUI=None):
-		self.objMap = objMap or Map()
+	def __init__(self, mapFile='', objMap=None, objGraphical=None, objUI=None):
+		self.objMap = objMap or Map(mapFile)
 		self.objGraphical = objGraphical or Graphical()
 		self.objUI = objUI or UI()
-	
+		self.points = 0
+
 	# ----------------------------------
 	# --- Private functions
 	# ----------------------------------
@@ -59,12 +60,18 @@ class Pacman():
 		print "Postion: %s\tNext: %s" %(pacmanPos, nextCellPos)
 		
 		# If the move was correct
-		if nextCellPos:
-			if self.objMap.isMovePossible(who=CellCharacterPacman, From=pacmanPos, To=nextCellPos):
-				action = self.objMap.moveAction(who=CellCharacterPacman, From=pacmanPos, To=nextCellPos)
-				self.objMap.makeMove(From=pacmanPos, To=nextCellPos, action=action)
-				#TODO
-				# Following the action, add a point, gives power, and die: update Graphical interface
+		if self.objMap.isMovePossible(From=pacmanPos, move=direction):
+			action = self.objMap.moveAction(From=pacmanPos, To=nextCellPos)
+			self.objMap.makeMove(From=pacmanPos, To=nextCellPos, action=action)
+			if action in [ActionPoint, ActionPower]: self.points += 1
+			#TODO
+			# Following the action, add a point, give power and die: update Graphical interface
+	
+	def ghostMovement(self, direction):
+		"""
+		Make all modifications and actions to move the ghost to his new position.
+		"""
+		
 
 
 
@@ -77,12 +84,18 @@ class Pacman():
 			print self.objMap
 			mvt = self.objUI.movement()
 			print "Movement: %s" %mvt
-			if mvt: self.pacmanMovement(mvt)
+			print "Points: %s" %self.points
+			self.pacmanMovement(mvt)
 		return
 
 if __name__=='__main__':
-	print "=======================\n\tWelcome\n To the PacmanPy game !\n======================="
-	print len("======================="), len("Welcome")
-	game = Pacman()
+	print "="*23
+	print "Welcome".center(23)
+	print "To the PacmanPy game !".center(23)
+	print "="*23
+	rootDir = os.sep.join(os.path.realpath(sys.argv[0]).split(os.sep)[:-2])
+	mapFile = ''
+	if len(sys.argv) == 2: mapFile = sys.argv[1]
+	game = Pacman(mapFile)
 	game.run()
 

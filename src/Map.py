@@ -25,11 +25,12 @@ class Map():
 	# --- Built-in functions
 	# ----------------------------------
 	def __init__(self, mapFile=''):
-		if mapFile: self.grid = self.loadGrid()
-		else:       self.grid = self._createBasicMap()
-		self.size = (len(self.grid), len(self.grid[0]))
+		# --- Load map
+		self.size, self.pacmanPosition, self.grid = self.loadGrid(mapFile)
 		
-		self.pacmanPosition = (15,9)
+		# --- Update cells authorized moves
+		self.updateCellsAuthorizedMoves()
+		
 		self.dColor = {CellItemNone: color()(" "),
 					   CellItemPoint: color(fgColor="yellow", bold=True)("o"),
 					   CellItemPower: color(fgColor="purple")("s"),
@@ -52,67 +53,40 @@ class Map():
 		grid = [[Cell() for line in range(size[1])] for column in range(size[0])]
 		return grid
 
-	def _createBasicMap(self):
+	def _writeMap(self):
 		"""
-		Create the basic map.
+		Write the current map with the 'PacmanMap' code.
 		"""
-		size = (21,19)
-		grid = self._initEmptyGrid(size)
-		
-		# --- Border
-		# Top
-		for col in range(size[1]): grid[0][col] = Cell(cellType=CellTypeWall)
-		# Bottom
-		for col in range(size[1]): grid[size[0]-1][col] = Cell(cellType=CellTypeWall)
-		# Left
-		for line in range(size[0]): grid[line][0] = Cell(cellType=CellTypeWall)
-		# Right
-		for line in range(size[0]): grid[line][size[1]-1] = Cell(cellType=CellTypeWall)
-		
-		# --- Ghost spawn
-		center = (9,9)
-		for line in range(center[0] -1, center[0]+2):
-			for col in range(center[1] -2, center[1]+3):
-				grid[line][col] = Cell(cellType=CellTypeWall)
-		for col in range(center[1] -1, center[1]+2): grid[center[0]][col] = Cell(cellType=CellTypePath, character=CellCharacterGhost)
-		grid[center[0]-1][center[1]] = Cell(cellType=CellTypeGlass, character=CellCharacterGhost)
-		
-		# --- Pacman spawn
-		grid[15][9] = Cell(cellType=CellTypePath, character=CellCharacterPacman)
-		
-		# --- Power
-		grid[2][1] = grid[2][17] = grid[15][1] = grid[15][17] = Cell(cellType=CellTypePath, item=CellItemPower)
-		
-		# --- Obstacles/walls
-		for col in [9]:									grid[1][col] = Cell(cellType=CellTypeWall)
-		for col in [2,3,5,6,7,9,11,12,13,15,16]:		grid[2][col] = Cell(cellType=CellTypeWall)
-		for col in [2,3,5,7,8,9,10,11,13,15,16]:		grid[4][col] = Cell(cellType=CellTypeWall)
-		for col in [5,9,13]:							grid[5][col] = Cell(cellType=CellTypeWall)
-		for col in [1,2,3,5,6,7,9,11,12,13,15,16,17]:	grid[6][col] = Cell(cellType=CellTypeWall)
-		for col in [1,2,3,5,13,15,16,17]:				grid[7][col] = Cell(cellType=CellTypeWall)
-		for col in [1,2,3,5,13,15,16,17]:				grid[8][col] = Cell(cellType=CellTypeWall)
-		for col in [1,2,3,5,13,15,16,17]:				grid[10][col] = Cell(cellType=CellTypeWall)
-		for col in [1,2,3,5,13,15,16,17]:				grid[11][col] = Cell(cellType=CellTypeWall)
-		for col in [1,2,3,5,7,8,9,10,11,13,15,16,17]:	grid[12][col] = Cell(cellType=CellTypeWall)
-		for col in [9]:									grid[13][col] = Cell(cellType=CellTypeWall)
-		for col in [2,3,5,6,7,9,11,12,13,15,16]:		grid[14][col] = Cell(cellType=CellTypeWall)
-		for col in [3,15]:								grid[15][col] = Cell(cellType=CellTypeWall)
-		for col in [1,3,5,7,8,9,10,11,13,15,17]:		grid[16][col] = Cell(cellType=CellTypeWall)
-		for col in [5,9,13]:							grid[17][col] = Cell(cellType=CellTypeWall)
-		for col in [2,3,4,5,6,7,9,11,12,13,14,15,16]:	grid[18][col] = Cell(cellType=CellTypeWall)
-		
-		# -- Doors
-		grid[9][0] = grid[9][18] = Cell(cellType=CellTypePath)
-		
-		# --- Food
-		for line in range(len(grid)):
-			for col in range(len(grid[line])):
-				if grid[line][col].getType() == CellTypePath and\
-				   grid[line][col].getItem() == CellItemNone and\
-				   grid[line][col].getCharacter() == CellCharacterNone:
-					grid[line][col].setItem(CellItemPoint)
-		
-		return grid
+		txt = str()
+		# Size
+		txt += "%s,%s\n" %(self.size[0], self.size[1])
+		# Pacman spawn TODO
+		txt += "%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
+		# Pacman position
+		txt += "%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
+		# Ghost spawn TODO
+		# Ghost positions TODO
+#		txt += "%s %s %s %s\n" %(["%s,%s" %(i.pos[0], i.pos[1]) for i in lGhostPositions])
+		txt += "12,9 13,8 13,9 13,10\n"
+		txt += "12,9 13,8 13,9 13,10\n"
+		# Map
+		for i in self.grid:
+			for j in i:
+				if   j.getType() == CellTypeWall: txt += 'w'
+				elif j.getType() == CellTypePath: txt += 'p'
+				elif j.getType() == CellTypeGlass: txt += 'g'
+				# Item
+				if   j.getItem() == CellItemPoint: txt += 'p'
+				elif j.getItem() == CellItemPower: txt += 's'
+				elif j.getItem() == CellItemNone: txt += 'n'
+				# Character
+				if   j.getCharacter() == CellCharacterNone: txt += 'n'
+				elif j.getCharacter() == CellCharacterGhost: txt += 'g'
+				elif j.getCharacter() == CellCharacterPacman: txt += 'p'
+				txt += ' '
+			txt = txt[:-1]
+			txt += '\n'
+		return txt
 
 	# ----------------------------------
 	# --- Get functions
@@ -121,9 +95,7 @@ class Map():
 		return self.pacmanPosition
 
 	def getCell(self, pos):
-		if (pos[0] >= 0 and pos[0] < self.size[0]) and (pos[1] >= 0 and pos[1] < self.size[1]):
-			return self.grid[pos[0]][pos[1]]
-		return False
+		return self.grid[pos[0]][pos[1]]
 
 	def getNextCellPos(self, pos, direction):
 		"""
@@ -146,49 +118,79 @@ class Map():
 	# ----------------------------------
 	# --- Common functions
 	# ----------------------------------
+	def decodeCell(self, code):
+		"""
+		Decode a 3-characters string encoding a cell's description.
+		"""
+		# Type
+		if   code[0] == 'w': Type = CellTypeWall
+		elif code[0] == 'p': Type = CellTypePath
+		elif code[0] == 'g': Type = CellTypeGlass
+		# Item
+		if   code[1] == 'p': Item = CellItemPoint
+		elif code[1] == 's': Item = CellItemPower
+		elif code[1] == 'n': Item = CellItemNone
+		# Character
+		if   code[2] == 'n': Char = CellCharacterNone
+		elif code[2] == 'g': Char = CellCharacterGhost
+		elif code[2] == 'p': Char = CellCharacterPacman
+		
+		return Cell(Type, Item, Char)
+	
 	def loadGrid(self, mapFile):
 		"""
 		Load a predefine map.
 		"""
-		f = open(mapFile, 'r')
-		# --- Get map size
-		nLine, nCol = map(int, f.readline().strip().split())
-		# --- Fill the grid
-		grid = self._initEmptyGrid((nLine, nCol))
-		l = f.readline()
-		while l:
-			v = map(int, l.strip().split())
-			grid[v[0]][v[1]] = v[2]
-		f.close()
-		return grid
-
-	def isMovePossible(self, who, From, To):
+		# TODO Take care of ghosts and pacman spawn
+		grid = list()
+		with open(mapFile, 'r') as fh:
+			# Map size:
+			size = tuple( map(int, fh.next().strip().split(',')) )
+			# Pacman spawn and current position
+			pacmanSpawn = tuple( map(int, fh.next().strip().split(',')) )
+			pacmanPosition = tuple( map(int, fh.next().strip().split(',')) )
+			# Ghosts spawns and current positions
+			lGhostSpawns = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
+			lGhostPositions = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
+			# Map
+			for line in fh:
+				grid.append( [self.decodeCell(code) for code in line.strip().split(' ')] )
+		return size, pacmanPosition, grid
+	
+	def updateCellsAuthorizedMoves(self):
 		"""
-		Check if the movement of 'who' is possible from a cell position to another.
-		'who': Cell character ID
+		For each cell of the grid, update his authorized moves.
+		"""
+		for l in range(self.size[0]):
+			for c in range(self.size[1]):
+				# Get cell's neighbors
+				cellUp = self.grid[(l-1)%self.size[0]][c].getType()
+				cellDown = self.grid[(l+1)%self.size[0]][c].getType()
+				cellRight = self.grid[l][(c+1)%self.size[1]].getType()
+				cellLeft = self.grid[l][(c-1)%self.size[1]].getType()
+				# Update authorized moves
+				self.grid[l][c].updateAuthorizedMoves(cellUp, cellDown, cellRight, cellLeft)
+	
+	def isMovePossible(self, From, move):
+		"""
+		Check if the movement is possible.
 		'From': position of a Cell
-		'To': position of a cell
+		'move': movement direction
 		"""
-		# If Cells aren't neighbor, the move isn't possible
-		if abs(From[0]%self.size[0] - To[0]%self.size[0]) > 1: return False
-		if abs(From[1]%self.size[1] - To[1]%self.size[1]) > 1: return False
-		
-		# If Cell is of type wall, the move isn't possible
-		if self.getCell(To).getType() == CellTypeWall: return False
-		
-		if who == CellCharacterPacman:
-			if self.getCell(To).getType() == CellTypeGlass: return False
-		
-		# -- Move is possible
-		return True
-
-	def moveAction(self, who, From, To):
+		print self.grid[From[0]][From[1]].getAuthorizedMoves()
+		if move in self.grid[From[0]][From[1]].getAuthorizedMoves(): return True
+		return False
+	
+	def moveAction(self, From, To):
 		"""
 		Return the action caused by the movement.
+		'From': position of the current Cell
+		'To': position of the target Cell
 		"""
+		FromCell = self.getCell(From)
 		ToCell = self.getCell(To)
 		# --- Pacman actions
-		if who == CellCharacterPacman:
+		if FromCell.getCharacter() == CellCharacterPacman:
 			# There is a ghost
 			if ToCell.getCharacter() == CellCharacterGhost: return ActionDie
 			# There is a point
@@ -205,24 +207,22 @@ class Map():
 	def makeMove(self, From, To, action):
 		"""
 		Make a pre-verified move of 'who' from a position to another.
-		'who': Cell character ID
-		'From': position of a Cell
-		'To': position of a cell
+		'From': position of the current Cell
+		'To': position of the target Cell
+		'action': action caused by the movement
 		"""
 		FromCell = self.getCell(From)
 		ToCell = self.getCell(To)
-		
 		# --- Pacman dies
 		if action == ActionDie: return True
 		# --- Any other action: the character moves
 		ToCell.setCharacter(FromCell.getCharacter())
 		FromCell.setCharacter(CellCharacterNone)
-		# --- If there is an item
-		if action in [ActionPoint, ActionPower]: ToCell.setItem(CellItemNone)
-		# --- It it's pacman moving:
+		# --- Is pacman moving:
 		if ToCell.getCharacter() == CellCharacterPacman:
 			self.setPacmanPosition(To)
-
+			# There is an item
+			if action in [ActionPoint, ActionPower]: ToCell.setItem(CellItemNone)
 
 
 

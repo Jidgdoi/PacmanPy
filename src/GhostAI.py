@@ -24,7 +24,11 @@ class GhostAI():
 	# ----------------------------------
 	def __init__(self, ID=GhostIDRed):
 		self.ID = ID
-		self.mvt = MovementTop
+		self.mvt = MovementUp
+		self.dAuthorizedMoves = {MovementUp:[MovementUp, MovementRight, MovementLeft],
+		                         MovementDown:[MovementDown, MovementRight, MovementLeft],
+		                         MovementRight:[MovementRight, MovementUp, MovementDown],
+		                         MovementLeft:[MovementLeft, MovementUp, MovementDown]}
 	
 	def __repr__(self):
 		return "Ghost %s" %self.ID
@@ -46,14 +50,12 @@ class GhostAI():
 	# ----------------------------------
 	# --- Common functions
 	# ----------------------------------
-	def nextMove(self):
+	
+	def randomMove(self):
 		"""
 		Return the next move of the ghost.
 		"""
-		lMvt = [-1,0,1]
-		r = random.choice([-1,0,1])
-		
-		return (self.mvt + random.choice([-1,0,1])) % 4
+		return random.choice(self.dAuthorizedMoves[self.mvt])
 	
 	def shortestPathTo(self, target):
 		"""
