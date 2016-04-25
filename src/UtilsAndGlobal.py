@@ -33,5 +33,9 @@ MovementLeft = 4
 
 # --- Action
 ActionDie = 666
-ActionPoint = 777
-ActionPower = 117
+ActionPoint = 117
+ActionPower = 777
+
+# --- Threads
+ExitFlag = 0
+

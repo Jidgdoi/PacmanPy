@@ -15,6 +15,21 @@ from Utility.Colors import *
 #    ===   Class GhostAI   ===
 # ===============================
 
+class Ghost():
+	"""
+	Object representing one ghost.
+	"""
+	# ----------------------------------
+	# --- Built-in functions
+	# ----------------------------------
+	def __init__(self, ID, state):
+		self.ID = ID
+		self.state = state
+
+# ===============================
+#    ===   Class GhostAI   ===
+# ===============================
+
 class GhostAI():
 	"""
 	Object controlling the Artificial Intelligence of Ghosts.
@@ -22,16 +37,18 @@ class GhostAI():
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, ID=GhostIDRed):
-		self.ID = ID
+	def __init__(self, threadID, name, speed):
+		self.threadID = threadID
+		self.name = name
 		self.mvt = MovementUp
 		self.dAuthorizedMoves = {MovementUp:[MovementUp, MovementRight, MovementLeft],
 		                         MovementDown:[MovementDown, MovementRight, MovementLeft],
 		                         MovementRight:[MovementRight, MovementUp, MovementDown],
 		                         MovementLeft:[MovementLeft, MovementUp, MovementDown]}
+		
 	
 	def __repr__(self):
-		return "Ghost %s" %self.ID
+		return "Ghost %s" %self.name
 	
 	# ----------------------------------
 	# --- Private functions
@@ -40,8 +57,6 @@ class GhostAI():
 	# ----------------------------------
 	# --- Get functions
 	# ----------------------------------
-	def getID(self):
-		return self.ID
 	
 	# ----------------------------------
 	# --- Set functions

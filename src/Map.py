@@ -24,9 +24,14 @@ class Map():
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, mapFile=''):
-		# --- Load map
-		self.size, self.pacmanPosition, self.grid = self.loadGrid(mapFile)
+	def __init__(self, mapFile):
+		self.pacmanPosition = list()
+		self.pacmanSpawn = list()
+		self.lGhostPositions = list()
+		self.lGhostSpawns = list()
+		
+		# --- Load Map + Pacman/ghosts spawn|position
+		self.loadMapFile(mapFile)
 		
 		# --- Update cells authorized moves
 		self.updateCellsAuthorizedMoves()
@@ -39,20 +44,13 @@ class Map():
 					   CellTypeWall: color(fgColor="black", bgColor="black", bold=False)("W"),
 					   CellTypeGlass: color(bgColor="blue")(" "),
 					   CellTypePath: color(fgColor="black")(" ")}
-	
+
 	def __repr__(self):
 		return '\n'.join( [' '.join( [self.dColor[j.toPrint()] for j in i] ) for i in self.grid] )
-	
+
 	# ----------------------------------
 	# --- Private functions
 	# ----------------------------------
-	def _initEmptyGrid(self, size):
-		"""
-		Return the grid of the game, of size 'size' (a list of lists).
-		"""
-		grid = [[Cell() for line in range(size[1])] for column in range(size[0])]
-		return grid
-
 	def _writeMap(self):
 		"""
 		Write the current map with the 'PacmanMap' code.
@@ -60,13 +58,12 @@ class Map():
 		txt = str()
 		# Size
 		txt += "%s,%s\n" %(self.size[0], self.size[1])
-		# Pacman spawn TODO
-		txt += "%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
-		# Pacman position
+		txt += "%s,%s\n" %(self.pacmanSpawn[0], self.pacmanSpawn[1])
 		txt += "%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
 		# Ghost spawn TODO
+		txt += "%s\n" %' '.join((["%s,%s" %(i.pos[0], i.pos[1]) for i in self.lGhostSpawns]))
 		# Ghost positions TODO
-#		txt += "%s %s %s %s\n" %(["%s,%s" %(i.pos[0], i.pos[1]) for i in lGhostPositions])
+		txt += "%s\n" %' '.join((["%s,%s" %(i.pos[0], i.pos[1]) for i in self.lGhostPositions]))
 		txt += "12,9 13,8 13,9 13,10\n"
 		txt += "12,9 13,8 13,9 13,10\n"
 		# Map
@@ -136,8 +133,8 @@ class Map():
 		elif code[2] == 'p': Char = CellCharacterPacman
 		
 		return Cell(Type, Item, Char)
-	
-	def loadGrid(self, mapFile):
+
+	def loadMapFile(self, mapFile):
 		"""
 		Load a predefine map.
 		"""
@@ -145,18 +142,18 @@ class Map():
 		grid = list()
 		with open(mapFile, 'r') as fh:
 			# Map size:
-			size = tuple( map(int, fh.next().strip().split(',')) )
+			self.size = tuple( map(int, fh.next().strip().split(',')) )
 			# Pacman spawn and current position
-			pacmanSpawn = tuple( map(int, fh.next().strip().split(',')) )
-			pacmanPosition = tuple( map(int, fh.next().strip().split(',')) )
+			self.pacmanSpawn = tuple( map(int, fh.next().strip().split(',')) )
+			self.pacmanPosition = tuple( map(int, fh.next().strip().split(',')) )
 			# Ghosts spawns and current positions
-			lGhostSpawns = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
-			lGhostPositions = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
+			self.lGhostSpawns = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
+			self.lGhostPositions = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
 			# Map
 			for line in fh:
 				grid.append( [self.decodeCell(code) for code in line.strip().split(' ')] )
-		return size, pacmanPosition, grid
-	
+		return True
+
 	def updateCellsAuthorizedMoves(self):
 		"""
 		For each cell of the grid, update his authorized moves.
@@ -170,7 +167,7 @@ class Map():
 				cellLeft = self.grid[l][(c-1)%self.size[1]].getType()
 				# Update authorized moves
 				self.grid[l][c].updateAuthorizedMoves(cellUp, cellDown, cellRight, cellLeft)
-	
+
 	def isMovePossible(self, From, move):
 		"""
 		Check if the movement is possible.
@@ -180,7 +177,7 @@ class Map():
 		print self.grid[From[0]][From[1]].getAuthorizedMoves()
 		if move in self.grid[From[0]][From[1]].getAuthorizedMoves(): return True
 		return False
-	
+
 	def moveAction(self, From, To):
 		"""
 		Return the action caused by the movement.
