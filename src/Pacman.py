@@ -68,18 +68,50 @@ class Pacman():
 		
 		# If the move was correct
 		if self.objMap.isMovePossible(From=pacmanPos, move=direction):
-			action = self.objMap.moveAction(From=pacmanPos, To=nextCellPos)
-			self.objMap.makeMove(From=pacmanPos, To=nextCellPos, action=action)
-			if action in [UAG.ActionPoint, UAG.ActionPower]: self.points += 1
+			# Get action
+			action = self.objMap.moveAction(Who=CellCharacterPacman, To=nextCellPos)
+			# Make Pacman move by updating objMap
+			self.objMap.makeMove(From=pacmanPos, To=nextCellPos)
+			# Update action effects
+			if action == UAG.ActionPoint:
+				self.points += 1
+			elif UAG.ActionPower:
+				self.points += 10
+				self.objGhostAI.fearThem()
 			#TODO
-			# Following the action, add a point, give power and die: update Graphical interface
-	
-	def ghostMovement(self):
+			# Action die
+
+	def ghostMovement(self, objGhost):
 		"""
 		Make all modifications and actions to move the ghosts to their new positions.
 		"""
+		ghostPos = self.objMap.getGhostPosition(objGhost.ID)
+		cellGhost = self.objMap.getCell(ghostPos)
+		# Define a direction for the ghost
+		if objGhost.state == UAG.GhostAlive:
+			direction = self.objGhostAI.randomMove(objGhost.mvt, cellGhost.getAuthorizedMoves())
+		elif objGhost.state == UAG.GhostAfraid:
+			direction = self.objGhostAI.randomMove(objGhost.mvt, cellGhost.getAuthorizedMoves())
+		else:
+			direction = self.objGhostAI.shortestPathTo(ghostPos)
 		
+		# Make the ghost move and update map
+		nextCellPos = self.objMap.getNextCellPos(ghostPos, direction)
+		action = self.objMap.moveAction(Who=CellCharacterGhost, To=nextCellPos)
+		self.objMap.makeMove(From=ghostPos, To=nextCellPos, GhostID=objGhost.ID)
+		#TODO
+		# Action die
 
+	def analyzeQuery(self, query):
+		"""
+		Answer to the query.
+		"""
+		if query[0] == UAG.CellCharacterPacman:
+			self.pacmanMovement(query[1])
+		elif query[0] == UAG.CellCharacterGhost:
+			self.ghostMovement(query[1])
+		else:
+			pass
 
 
 	# ----------------------------------
@@ -91,24 +123,24 @@ class Pacman():
 			# Catch movement
 #			print "[Pacman] 1 - Get data from queue."
 			try:
-				mvt = self.dataQueue.get_nowait()
+				query = self.dataQueue.get_nowait()
 			except :
 #				print "[Pacman] Queue.Empty()"
-				mvt = None
-#			mvt = self.dataQueue.get()
+				query = None
+#			query = self.dataQueue.get()
 #			print "[Pacman] 2 - Get data from queue."
 			# Analyse movement
-			if mvt == False:
+			if query == False:
 #				print "[Pacman] Movement is False: ExitFlag"
 				UAG.ExitFlag = 1
-			elif mvt == None:
+			elif query == None:
 				time.sleep(self.delay)
 			else:
 #				print(chr(27) + "[2J")
 				os.system('clear')
 				print "Movement: %s" %mvt
 				print "Points: %s" %self.points
-				self.pacmanMovement(mvt)
+				self.analyzeQuery(query)
 				print self.objMap
 		return
 
@@ -130,7 +162,7 @@ if __name__=='__main__':
 	ghostSpeed = 1.0
 	
 	dThreads = {"Thread-UI":UI(1, "Thread-UI", queue, lock, delay),
-	            "Thread-Ghost":GhostAI(2, "Thread-Ghost", ghostSpeed)}
+	            "Thread-Ghost":GhostAI(2, "Thread-Ghost", queue, lock, ghostSpeed)}
 	print "[Pacman] Initiate threads"
 	for t in dThreads:
 		print "\t%s" %dThreads[t].name

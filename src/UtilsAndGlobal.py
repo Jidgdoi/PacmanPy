@@ -20,10 +20,9 @@ CellCharacterPacman = 18419
 CellCharacterGhost = 13012
 
 # --- Ghost ID
-GhostIDRed = 17617
-GhostIDGreen = 13612
-GhostIDBlue = 14747
-GhostIDWhite = 15510
+GhostAlive = 1
+GhostAfraid = 2
+GhostDead = 0
 
 # --- Movement
 MovementUp = 8

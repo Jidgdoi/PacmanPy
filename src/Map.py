@@ -25,10 +25,11 @@ class Map():
 	# --- Built-in functions
 	# ----------------------------------
 	def __init__(self, mapFile):
+		self.grid = list()
 		self.pacmanPosition = list()
 		self.pacmanSpawn = list()
-		self.lGhostPositions = list()
-		self.lGhostSpawns = list()
+		self.dGhostPositions = dict()
+		self.dGhostSpawns = dict()
 		
 		# --- Load Map + Pacman/ghosts spawn|position
 		self.loadMapFile(mapFile)
@@ -58,14 +59,12 @@ class Map():
 		txt = str()
 		# Size
 		txt += "%s,%s\n" %(self.size[0], self.size[1])
+		# Pacman spawn and position
 		txt += "%s,%s\n" %(self.pacmanSpawn[0], self.pacmanSpawn[1])
 		txt += "%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
-		# Ghost spawn TODO
-		txt += "%s\n" %' '.join((["%s,%s" %(i.pos[0], i.pos[1]) for i in self.lGhostSpawns]))
-		# Ghost positions TODO
-		txt += "%s\n" %' '.join((["%s,%s" %(i.pos[0], i.pos[1]) for i in self.lGhostPositions]))
-		txt += "12,9 13,8 13,9 13,10\n"
-		txt += "12,9 13,8 13,9 13,10\n"
+		# Ghost spawns and positions
+		txt += "%s\n" %' '.join((["%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostSpawns.items()]))
+		txt += "%s\n" %' '.join((["%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostPositions.items()]))
 		# Map
 		for i in self.grid:
 			for j in i:
@@ -91,6 +90,9 @@ class Map():
 	def getPacmanPosition(self):
 		return self.pacmanPosition
 
+	def getGhostPosition(self, ID):
+		return self.dGhostPositions[ID]
+
 	def getCell(self, pos):
 		return self.grid[pos[0]][pos[1]]
 
@@ -111,6 +113,9 @@ class Map():
 	# ----------------------------------
 	def setPacmanPosition(self, pos):
 		self.pacmanPosition = pos
+
+	def setGhostPosition(self, ID, pos):
+		self.dGhostPositions[ID] = pos
 
 	# ----------------------------------
 	# --- Common functions
@@ -139,7 +144,7 @@ class Map():
 		Load a predefine map.
 		"""
 		# TODO Take care of ghosts and pacman spawn
-		grid = list()
+		self.grid = list()
 		with open(mapFile, 'r') as fh:
 			# Map size:
 			self.size = tuple( map(int, fh.next().strip().split(',')) )
@@ -147,11 +152,16 @@ class Map():
 			self.pacmanSpawn = tuple( map(int, fh.next().strip().split(',')) )
 			self.pacmanPosition = tuple( map(int, fh.next().strip().split(',')) )
 			# Ghosts spawns and current positions
-			self.lGhostSpawns = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
-			self.lGhostPositions = [map(int, i.split(',')) for i in fh.next().strip().split(' ')]
+#			self.dGhostPositions = {map(int, i.split(',')) for i in fh.next().strip().split(' ')}
+			for i in fh.next().strip().split(' '):
+				tmp = map(int, i.split(','))
+				self.dGhostPositions[tmp[0]] = tmp[1:]
+			for i in fh.next().strip().split(' '):
+				tmp = map(int, i.split(','))
+				self.dGhostPositions[tmp[0]] = tmp[1:]
 			# Map
 			for line in fh:
-				grid.append( [self.decodeCell(code) for code in line.strip().split(' ')] )
+				self.grid.append( [self.decodeCell(code) for code in line.strip().split(' ')] )
 		return True
 
 	def updateCellsAuthorizedMoves(self):
@@ -178,30 +188,26 @@ class Map():
 		if move in self.grid[From[0]][From[1]].getAuthorizedMoves(): return True
 		return False
 
-	def moveAction(self, From, To):
+	def moveAction(self, Who, To):
 		"""
 		Return the action caused by the movement.
-		'From': position of the current Cell
+		'Who': ID of the character
 		'To': position of the target Cell
 		"""
-		FromCell = self.getCell(From)
 		ToCell = self.getCell(To)
-		# --- Pacman actions
-		if FromCell.getCharacter() == CellCharacterPacman:
-			# There is a ghost
-			if ToCell.getCharacter() == CellCharacterGhost: return ActionDie
+		if (Who == CellCharacterGhost and ToCell.getCharacter() == CellCharacterPacman) or (Who == CellCharacterPacman and ToCell.getCharacter() == CellCharacterGhost):
+			# Pacman meet a ghost
+			return ActionDie
+		# --- Pacman specials actions
+		if Who == CellCharacterPacman:
 			# There is a point
 			if ToCell.getItem() == CellItemPoint: return ActionPoint
 			# There is a power
 			if ToCell.getItem() == CellItemPower: return ActionPower
-		# --- Ghost actions
-		else:
-			# There is Pacman
-			if ToCell.getCharacter() == CellCharacterPacman: return ActionDie
 		# --- For all others cases: no actions
 		return None
 
-	def makeMove(self, From, To, action):
+	def makeMove(self, From, To, ghostID=None):
 		"""
 		Make a pre-verified move of 'who' from a position to another.
 		'From': position of the current Cell
@@ -210,16 +216,21 @@ class Map():
 		"""
 		FromCell = self.getCell(From)
 		ToCell = self.getCell(To)
-		# --- Pacman dies
-		if action == ActionDie: return True
-		# --- Any other action: the character moves
-		ToCell.setCharacter(FromCell.getCharacter())
-		FromCell.setCharacter(CellCharacterNone)
-		# --- Is pacman moving:
+		# --- Update positions
 		if ToCell.getCharacter() == CellCharacterPacman:
+			# Pacman
 			self.setPacmanPosition(To)
 			# There is an item
 			if action in [ActionPoint, ActionPower]: ToCell.setItem(CellItemNone)
+		else:
+			# Ghost
+			self.setGhostPosition(ghostID, To)
+		
+		# --- Update cell character
+		ToCell.setCharacter(FromCell.getCharacter())
+		#TODO Verify if From and Ghosts positions are both tuples
+		if From not in self.dGhostPositions.values():
+			FromCell.setCharacter(CellCharacterNone)
 
 
 
