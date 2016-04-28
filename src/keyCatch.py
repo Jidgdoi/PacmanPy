@@ -17,12 +17,22 @@ class MyForm(wx.Frame):
 		controlDown = event.CmdDown()
 		altDown = event.AltDown()
 		shiftDown = event.ShiftDown()
- 		
+		
+		print "Control event: %s" %controlDown
+		print "Alt event: %s" %altDown
+		print "Shift event: %s" %shiftDown
+		
 		print keycode
 		if keycode == wx.WXK_SPACE:
 			print "you pressed the spacebar!"
 		elif controlDown and altDown:
 			print keycode
+		elif keycode == wx.WXK_LEFT:
+			print "Left arrow"
+		elif keycode == wx.WXK_UP:
+			print "Up arrow"
+		elif keycode == 97:
+			self.Destroy()
 		event.Skip()
  
  
@@ -31,4 +41,6 @@ if __name__ == "__main__":
 	app = wx.PySimpleApp()
 	frame = MyForm()
 	frame.Show()
+	print "Before"
 	app.MainLoop()
+	print "End"
