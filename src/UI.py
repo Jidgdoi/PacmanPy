@@ -65,6 +65,7 @@ class UI(threading.Thread):
 
 	def run(self):
 		mvt = True
+		time.sleep(1)
 		while mvt and not UAG.ExitFlag:
 #			print "[objUI] 1 - Waiting movement"
 			query = [UAG.CellCharacterPacman, self.movement()]

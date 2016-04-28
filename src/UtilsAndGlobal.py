@@ -38,3 +38,8 @@ ActionPower = 777
 # --- Threads
 ExitFlag = 0
 
+# --- Game control
+PacmanDelay = 0.05
+GhostSpeed = 1.0
+
+

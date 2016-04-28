@@ -29,7 +29,7 @@ class Ghost():
 	def __repr__(self):
 		return "%s%s\033[0m: %s" %(self.color, self.ID, "Alive" if self.state == 1 else "Afraid" if self.state == 2 else "Dead")
 
-	def setMvt(self, direction):
+	def setNewDirection(self, direction):
 		"""
 		Set new direction for the ghost.
 		"""
@@ -104,7 +104,7 @@ class GhostAI(threading.Thread):
 		"""
 		Initiate Ghosts objects.
 		"""
-		return {i:Ghost(i, 1, i) for i in range(n)}
+		return {i:Ghost(i, 1, "\033[5;3%sm" %i) for i in range(n)}
 
 	# ----------------------------------
 	# --- Get functions
@@ -122,15 +122,16 @@ class GhostAI(threading.Thread):
 	# ----------------------------------
 	# --- Move functions
 	# ----------------------------------
-	def randomMove(self, direction, availableMove):
+	def randomMove(self, direction, lCellAuthorizedMoves):
 		"""
 		Return the new direction for a ghost.
 		'direction': current ghost direction
-		'availableMove': list of available move from the current cell of the ghost
+		'lCellAuthorizedMoves': list of authorized moves from the current cell
 		"""
-		print "dAuthorizedMoves", self.dAuthorizedMoves[direction]
-		print "availableMove", availableMove
-		return random.choice(list( set(self.dAuthorizedMoves[direction]) & set(availableMove) ))
+		lDirection = list( set(self.dAuthorizedMoves[direction]) & set(lCellAuthorizedMoves) )
+		# If it's a dead-end, go back
+		if lDirection: return random.choice(lDirection)
+		else: return lCellAuthorizedMoves[0]
 
 	def shortestPathTo(self, target):
 		"""
@@ -143,11 +144,11 @@ class GhostAI(threading.Thread):
 	# ----------------------------------
 	def run(self):
 		while not UAG.ExitFlag:
-			print "[GhostAI] 1 - Ghost ask to move"
+#			print "[GhostAI] 1 - Ghosts ask to move"
 			self.queueLock.acquire()
 			for g in self.dGhosts.values():
 				query = [UAG.CellCharacterGhost, g]
-				print "[GhostAI] 2 - Ghost %s put movement in queue" %g.ID
+#				print "[GhostAI] 2 - Ghost %s put movement in queue" %g.ID
 				self.queue.put(query)
 			self.queueLock.release()
 			time.sleep(self.speed)

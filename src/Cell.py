@@ -5,7 +5,7 @@
 
 import os,sys
 
-from UtilsAndGlobal import *
+import UtilsAndGlobal as UAG
 
 from Utility.MyToolbox import MyToolbox as MTB
 from Utility.Colors import *
@@ -21,15 +21,15 @@ class Cell():
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, cellType=CellTypePath, item=CellItemNone, character=CellCharacterNone):
+	def __init__(self, cellType=UAG.CellTypePath, item=UAG.CellItemNone, character=UAG.CellCharacterNone):
 		self.type = cellType
 		self.item = item
 		self.character = character
-		self.lAuthorizedMoves = []
+		self.dAuthorizedMoves = {}
 	
 	def __repr__(self):
-		t, i = MTB.getKey(globals(), [self.type, self.item])
-		return "(%s,%s)" %(t, i)
+		t, i, c = MTB.getKey(vars(UAG), [self.type, self.item, self.character])
+		return "(%s,%s,%s)" %(t, i, c)
 	
 	# ----------------------------------
 	# --- Private functions
@@ -47,41 +47,43 @@ class Cell():
 	def getCharacter(self):
 		return self.character
 	
-	def getAuthorizedMoves(self):
-		return self.lAuthorizedMoves
+	def getAuthorizedMoves(self, Who):
+		if Who == UAG.CellCharacterGhost:
+			return self.dAuthorizedMoves[UAG.CellCharacterGhost]
+		return self.dAuthorizedMoves[UAG.CellCharacterPacman]
 	
 	# ----------------------------------
 	# --- Set functions
 	# ----------------------------------
 	def setItem(self, new):
-		if self.type != CellTypeWall:
+		if self.type != UAG.CellTypeWall:
 			self.item = new
 	
 	def setCharacter(self, new):
-		if self.type != CellTypeWall:
+		if self.type != UAG.CellTypeWall:
 			self.character = new
 	
 	# ----------------------------------
 	# --- Common functions
 	# ----------------------------------
 	def deleteItem(self):
-		self.item = CellItemNone
+		self.item = UAG.CellItemNone
 	
 	def updateAuthorizedMoves(self, cellUpType, cellDownType, cellRightType, cellLeftType):
 		"""
 		Update the list variable 'self.lAuthorizedMove', which contain the authorized move around the cell.
 		"""
-		lMoves = list()
+		self.dAuthorizedMoves[UAG.CellCharacterPacman] = list()
+		self.dAuthorizedMoves[UAG.CellCharacterGhost] = list()
 		# Walls can't have authorized move
-		if self.type == CellTypeWall:
-			self.lAuthorizedMoves = lMoves
-			return
-		if cellUpType == CellTypePath: lMoves.append(MovementUp)
-		if cellDownType == CellTypePath: lMoves.append(MovementDown)
-		if cellRightType == CellTypePath: lMoves.append(MovementRight)
-		if cellLeftType == CellTypePath: lMoves.append(MovementLeft)
-		# Update list
-		self.lAuthorizedMoves = lMoves
+		if self.type == UAG.CellTypeWall: return
+		# Others
+		for t,d in [(cellUpType,UAG.MovementUp), (cellDownType,UAG.MovementDown), (cellRightType, UAG.MovementRight), (cellLeftType, UAG.MovementLeft)]:
+			if t == UAG.CellTypePath:
+				self.dAuthorizedMoves[UAG.CellCharacterPacman].append(d)
+				self.dAuthorizedMoves[UAG.CellCharacterGhost].append(d)
+			elif t == UAG.CellTypeGlass:
+				self.dAuthorizedMoves[UAG.CellCharacterGhost].append(d)
 		return
 	
 	def toPrint(self):
@@ -89,9 +91,9 @@ class Cell():
 		Return the principle GLOBAL ID to print (pacman, point, wall ...)
 		Character > Item > Cell type
 		"""
-		if self.character != CellCharacterNone:
+		if self.character != UAG.CellCharacterNone:
 			return self.character
-		elif self.item != CellItemNone:
+		elif self.item != UAG.CellItemNone:
 			return self.item
 		else:
 			return self.type

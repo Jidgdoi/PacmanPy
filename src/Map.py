@@ -6,7 +6,7 @@
 import os,sys
 import numpy as np
 
-from UtilsAndGlobal import *
+import UtilsAndGlobal as UAG
 from Cell import Cell
 
 from datetime import datetime
@@ -37,14 +37,14 @@ class Map():
 		# --- Update cells authorized moves
 		self.updateCellsAuthorizedMoves()
 		
-		self.dColor = {CellItemNone: color()(" "),
-					   CellItemPoint: color(fgColor="yellow", bold=True)("o"),
-					   CellItemPower: color(fgColor="purple")("s"),
-					   CellCharacterPacman: color(fgColor="blue")("P"),
-					   CellCharacterGhost: color(fgColor="red", bold=True)("G"),
-					   CellTypeWall: color(fgColor="black", bgColor="black", bold=False)("W"),
-					   CellTypeGlass: color(bgColor="blue")(" "),
-					   CellTypePath: color(fgColor="black")(" ")}
+		self.dColor = {UAG.CellItemNone: color()(" "),
+					   UAG.CellItemPoint: color(fgColor="yellow", bold=True)("o"),
+					   UAG.CellItemPower: color(fgColor="purple")("s"),
+					   UAG.CellCharacterPacman: color(fgColor="blue")("P"),
+					   UAG.CellCharacterGhost: color(fgColor="red", bold=True)("G"),
+					   UAG.CellTypeWall: color(fgColor="black", bgColor="black", bold=False)("W"),
+					   UAG.CellTypeGlass: color(bgColor="blue")(" "),
+					   UAG.CellTypePath: color(fgColor="black")(" ")}
 
 	def __repr__(self):
 		return '\n'.join( [' '.join( [self.dColor[j.toPrint()] for j in i] ) for i in self.grid] )
@@ -68,17 +68,17 @@ class Map():
 		# Map
 		for i in self.grid:
 			for j in i:
-				if   j.getType() == CellTypeWall: txt += 'w'
-				elif j.getType() == CellTypePath: txt += 'p'
-				elif j.getType() == CellTypeGlass: txt += 'g'
+				if   j.getType() == UAG.CellTypeWall: txt += 'w'
+				elif j.getType() == UAG.CellTypePath: txt += 'p'
+				elif j.getType() == UAG.CellTypeGlass: txt += 'g'
 				# Item
-				if   j.getItem() == CellItemPoint: txt += 'p'
-				elif j.getItem() == CellItemPower: txt += 's'
-				elif j.getItem() == CellItemNone: txt += 'n'
+				if   j.getItem() == UAG.CellItemPoint: txt += 'p'
+				elif j.getItem() == UAG.CellItemPower: txt += 's'
+				elif j.getItem() == UAG.CellItemNone: txt += 'n'
 				# Character
-				if   j.getCharacter() == CellCharacterNone: txt += 'n'
-				elif j.getCharacter() == CellCharacterGhost: txt += 'g'
-				elif j.getCharacter() == CellCharacterPacman: txt += 'p'
+				if   j.getCharacter() == UAG.CellCharacterNone: txt += 'n'
+				elif j.getCharacter() == UAG.CellCharacterGhost: txt += 'g'
+				elif j.getCharacter() == UAG.CellCharacterPacman: txt += 'p'
 				txt += ' '
 			txt = txt[:-1]
 			txt += '\n'
@@ -102,10 +102,10 @@ class Map():
 		'pos': tuple of int - the position
 		'direction': direction movement (MovementUp, MovementDown, MovementRight, MovementLeft).
 		"""
-		if direction == MovementUp:      return ((pos[0] -1)%self.size[0], pos[1])
-		elif direction == MovementDown:  return ((pos[0] +1)%self.size[0], pos[1])
-		elif direction == MovementRight: return (pos[0], (pos[1] +1)%self.size[1])
-		elif direction == MovementLeft:  return (pos[0], (pos[1] -1)%self.size[1])
+		if direction == UAG.MovementUp:      return ((pos[0] -1)%self.size[0], pos[1])
+		elif direction == UAG.MovementDown:  return ((pos[0] +1)%self.size[0], pos[1])
+		elif direction == UAG.MovementRight: return (pos[0], (pos[1] +1)%self.size[1])
+		elif direction == UAG.MovementLeft:  return (pos[0], (pos[1] -1)%self.size[1])
 		return False
 
 	# ----------------------------------
@@ -125,17 +125,17 @@ class Map():
 		Decode a 3-characters string encoding a cell's description.
 		"""
 		# Type
-		if   code[0] == 'w': Type = CellTypeWall
-		elif code[0] == 'p': Type = CellTypePath
-		elif code[0] == 'g': Type = CellTypeGlass
+		if   code[0] == 'w': Type = UAG.CellTypeWall
+		elif code[0] == 'p': Type = UAG.CellTypePath
+		elif code[0] == 'g': Type = UAG.CellTypeGlass
 		# Item
-		if   code[1] == 'p': Item = CellItemPoint
-		elif code[1] == 's': Item = CellItemPower
-		elif code[1] == 'n': Item = CellItemNone
+		if   code[1] == 'p': Item = UAG.CellItemPoint
+		elif code[1] == 's': Item = UAG.CellItemPower
+		elif code[1] == 'n': Item = UAG.CellItemNone
 		# Character
-		if   code[2] == 'n': Char = CellCharacterNone
-		elif code[2] == 'g': Char = CellCharacterGhost
-		elif code[2] == 'p': Char = CellCharacterPacman
+		if   code[2] == 'n': Char = UAG.CellCharacterNone
+		elif code[2] == 'g': Char = UAG.CellCharacterGhost
+		elif code[2] == 'p': Char = UAG.CellCharacterPacman
 		
 		return Cell(Type, Item, Char)
 
@@ -155,10 +155,10 @@ class Map():
 #			self.dGhostPositions = {map(int, i.split(',')) for i in fh.next().strip().split(' ')}
 			for i in fh.next().strip().split(' '):
 				tmp = map(int, i.split(','))
-				self.dGhostPositions[tmp[0]] = tmp[1:]
+				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
 			for i in fh.next().strip().split(' '):
 				tmp = map(int, i.split(','))
-				self.dGhostPositions[tmp[0]] = tmp[1:]
+				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
 			# Map
 			for line in fh:
 				self.grid.append( [self.decodeCell(code) for code in line.strip().split(' ')] )
@@ -178,14 +178,13 @@ class Map():
 				# Update authorized moves
 				self.grid[l][c].updateAuthorizedMoves(cellUp, cellDown, cellRight, cellLeft)
 
-	def isMovePossible(self, From, move):
+	def isMovePossible(self, From, direction):
 		"""
 		Check if the movement is possible.
 		'From': position of a Cell
-		'move': movement direction
+		'direction': movement direction
 		"""
-		print self.grid[From[0]][From[1]].getAuthorizedMoves()
-		if move in self.grid[From[0]][From[1]].getAuthorizedMoves(): return True
+		if direction in self.grid[From[0]][From[1]].getAuthorizedMoves(UAG.CellCharacterPacman): return True
 		return False
 
 	def moveAction(self, Who, To):
@@ -195,42 +194,43 @@ class Map():
 		'To': position of the target Cell
 		"""
 		ToCell = self.getCell(To)
-		if (Who == CellCharacterGhost and ToCell.getCharacter() == CellCharacterPacman) or (Who == CellCharacterPacman and ToCell.getCharacter() == CellCharacterGhost):
+		if (Who == UAG.CellCharacterGhost and ToCell.getCharacter() == UAG.CellCharacterPacman) or (Who == UAG.CellCharacterPacman and ToCell.getCharacter() == UAG.CellCharacterGhost):
 			# Pacman meet a ghost
-			return ActionDie
+			return UAG.ActionDie
 		# --- Pacman specials actions
-		if Who == CellCharacterPacman:
+		if Who == UAG.CellCharacterPacman:
 			# There is a point
-			if ToCell.getItem() == CellItemPoint: return ActionPoint
+			if ToCell.getItem() == UAG.CellItemPoint: return UAG.ActionPoint
 			# There is a power
-			if ToCell.getItem() == CellItemPower: return ActionPower
+			if ToCell.getItem() == UAG.CellItemPower: return UAG.ActionPower
 		# --- For all others cases: no actions
 		return None
 
-	def makeMove(self, From, To, ghostID=None):
+	def makeMove(self, From, To, Action, GhostID=None):
 		"""
 		Make a pre-verified move of 'who' from a position to another.
 		'From': position of the current Cell
 		'To': position of the target Cell
-		'action': action caused by the movement
+		'Action': action caused by the movement
+		'GhostID': ghost ID
 		"""
 		FromCell = self.getCell(From)
 		ToCell = self.getCell(To)
 		# --- Update positions
-		if ToCell.getCharacter() == CellCharacterPacman:
+		if ToCell.getCharacter() == UAG.CellCharacterPacman:
 			# Pacman
 			self.setPacmanPosition(To)
 			# There is an item
-			if action in [ActionPoint, ActionPower]: ToCell.setItem(CellItemNone)
+			if Action in [UAG.ActionPoint, UAG.ActionPower]: ToCell.setItem(UAG.CellItemNone)
 		else:
 			# Ghost
-			self.setGhostPosition(ghostID, To)
+			self.setGhostPosition(GhostID, To)
 		
 		# --- Update cell character
 		ToCell.setCharacter(FromCell.getCharacter())
 		#TODO Verify if From and Ghosts positions are both tuples
 		if From not in self.dGhostPositions.values():
-			FromCell.setCharacter(CellCharacterNone)
+			FromCell.setCharacter(UAG.CellCharacterNone)
 
 
 
