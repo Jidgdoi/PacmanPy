@@ -21,6 +21,7 @@ class Ghost():
 	Object representing a ghost.
 	"""
 	def __init__(self, ID, state, color=''):
+		self.character = UAG.CellCharacterGhost
 		self.ID = ID
 		self.state = state
 		self.color = color or "\033[1;3%sm" %random.choice([1,2,4,7])
@@ -53,22 +54,22 @@ class Ghost():
 		"""
 		Change ghost's state to GhostDead.
 		"""
-		if self.state == GhostAfraid: self.state = GhostDead
+		if self.state == UAG.GhostAfraid: self.state = UAG.GhostDead
 		else: print "The ghost %s is not afraid, he can't die." %self.ID
 
 	def resurect(self):
 		"""
 		Change ghost's state to GhostAlive and make him turn back.
 		"""
-		if self.state != GhostAlive:
-			self.state = GhostAlive
+		if self.state != UAG.GhostAlive:
+			self.state = UAG.GhostAlive
 			# Turn back
 			if self.mvt == UAG.MovementUp: self.mvt = UAG.MovementDown
 			elif self.mvt == UAG.MovementDown: self.mvt = UAG.MovementUp
 			elif self.mvt == UAG.MovementRight: self.mvt = UAG.MovementLeft
 			else: self.mvt = UAG.MovementRight
 		else:
-			print "The ghost %s is not dead, he can't resurect." %self.ID
+			print "The ghost %s is not dead or afraid, he can't resurect." %self.ID
 
 # ===============================
 #    ===   Class GhostAI   ===
@@ -81,12 +82,12 @@ class GhostAI(threading.Thread):
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, threadID, name, queue, queueLock, speed):
+	def __init__(self, threadID, threadName, queue, queueLock, speed):
 		# Init thread module in this class
 		threading.Thread.__init__(self)
 		
 		self.threadID = threadID
-		self.name = name
+		self.threadName = threadName
 		self.queue = queue
 		self.queueLock = queueLock
 		self.speed = speed
@@ -105,10 +106,6 @@ class GhostAI(threading.Thread):
 		Initiate Ghosts objects.
 		"""
 		return {i:Ghost(i, 1, "\033[5;3%sm" %i) for i in range(n)}
-
-	# ----------------------------------
-	# --- Get functions
-	# ----------------------------------
 
 	# ----------------------------------
 	# --- Set functions
@@ -138,6 +135,17 @@ class GhostAI(threading.Thread):
 		Return the shortest path (list of movement) to the target.
 		"""
 		return
+
+	def directionFollowingState(self, ghost, lCellAuthorizedMoves):
+		"""
+		Return the new direction for a ghost following his state.
+		"""
+		if ghost.state == UAG.GhostAlive:
+			return self.randomMove(ghost.mvt, lCellAuthorizedMoves)
+		elif ghost.state == UAG.GhostAfraid:
+			return self.randomMove(ghost.mvt, lCellAuthorizedMoves)
+		else:
+			return self.objGhostAI.shortestPathTo(ghostPos)
 
 	# ----------------------------------
 	# --- Run

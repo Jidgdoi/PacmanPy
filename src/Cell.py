@@ -21,54 +21,63 @@ class Cell():
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, cellType=UAG.CellTypePath, item=UAG.CellItemNone, character=UAG.CellCharacterNone):
+	def __init__(self, pos, cellType=UAG.CellTypePath, item=UAG.CellItemNone, dCharactersObj={}):
+		self.pos = pos
 		self.type = cellType
 		self.item = item
-		self.character = character
+		self.dCharactersObj = dCharactersObj
 		self.dAuthorizedMoves = {}
-	
+
 	def __repr__(self):
 		t, i, c = MTB.getKey(vars(UAG), [self.type, self.item, self.character])
 		return "(%s,%s,%s)" %(t, i, c)
-	
-	# ----------------------------------
-	# --- Private functions
-	# ----------------------------------
-	
+
 	# ----------------------------------
 	# --- Get functions
 	# ----------------------------------
 	def getType(self):
 		return self.type
-	
+
 	def getItem(self):
 		return self.item
-	
-	def getCharacter(self):
-		return self.character
-	
+
+	def getCharactersType(self, mostImportant=False):
+		"""
+		Return the list of characters present on this cell.
+		'mostImportant': if pacman and ghost(s) are present, return pacman.
+		"""
+		if self.dCharactersObj.has_key(UAG.CellCharacterNone): return [UAG.CellCharacterNone]
+		elif mostImportant and self.dCharactersObj.has_key(UAG.CellCharacterPacman): return [UAG.CellCharacterPacman]
+		else: return list(set([c.character for c in self.dCharactersObj.values()]))
+
+	def getCharactersObj(self, key=''):
+		if key: return self.dCharacters[key]
+		return self.dCharactersObj
+
 	def getAuthorizedMoves(self, Who):
 		if Who == UAG.CellCharacterGhost:
 			return self.dAuthorizedMoves[UAG.CellCharacterGhost]
 		return self.dAuthorizedMoves[UAG.CellCharacterPacman]
-	
+
 	# ----------------------------------
 	# --- Set functions
 	# ----------------------------------
 	def setItem(self, new):
 		if self.type != UAG.CellTypeWall:
 			self.item = new
-	
-	def setCharacter(self, new):
-		if self.type != UAG.CellTypeWall:
-			self.character = new
-	
+
+	def addCharacter(self, new):
+		self.dCharactersObj[new.ID] = new
+
 	# ----------------------------------
 	# --- Common functions
 	# ----------------------------------
 	def deleteItem(self):
-		self.item = UAG.CellItemNone
-	
+		self.setItem(UAG.CellItemNone)
+
+	def popCharacter(self, ID):
+		return self.dCharactersObj.pop(ID)
+
 	def updateAuthorizedMoves(self, cellUpType, cellDownType, cellRightType, cellLeftType):
 		"""
 		Update the list variable 'self.lAuthorizedMove', which contain the authorized move around the cell.
@@ -85,14 +94,14 @@ class Cell():
 			elif t == UAG.CellTypeGlass:
 				self.dAuthorizedMoves[UAG.CellCharacterGhost].append(d)
 		return
-	
+
 	def toPrint(self):
 		"""
 		Return the principle GLOBAL ID to print (pacman, point, wall ...)
 		Character > Item > Cell type
 		"""
-		if self.character != UAG.CellCharacterNone:
-			return self.character
+		if self.dCharactersObj.keys():
+			return self.getCharactersType(mostImportant=True)[0]
 		elif self.item != UAG.CellItemNone:
 			return self.item
 		else:

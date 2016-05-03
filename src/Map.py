@@ -50,9 +50,51 @@ class Map():
 		return '\n'.join( [' '.join( [self.dColor[j.toPrint()] for j in i] ) for i in self.grid] )
 
 	# ----------------------------------
-	# --- Private functions
+	# --- PacmanMap functions
 	# ----------------------------------
-	def _writeMap(self):
+	def decodeCell(self, line, col, code):
+		"""
+		Decode a 3-characters string encoding a cell's description.
+		"""
+		# Type
+		if   code[0] == 'w': Type = UAG.CellTypeWall
+		elif code[0] == 'p': Type = UAG.CellTypePath
+		elif code[0] == 'g': Type = UAG.CellTypeGlass
+		# Item
+		if   code[1] == 'p': Item = UAG.CellItemPoint
+		elif code[1] == 's': Item = UAG.CellItemPower
+		elif code[1] == 'n': Item = UAG.CellItemNone
+		# Characters will be placed later
+		return Cell((line,col), Type, Item, {})
+
+	def loadMapFile(self, mapFile):
+		"""
+		Load a 'PacmanMap' file.
+		"""
+		# TODO Take care of ghosts and pacman spawn
+		self.grid = list()
+		with open(mapFile, 'r') as fh:
+			# Map size:
+			self.size = tuple( map(int, fh.next().strip().split(',')) )
+			# Pacman spawn and current position
+			self.pacmanSpawn = tuple( map(int, fh.next().strip().split(',')) )
+			self.pacmanPosition = tuple( map(int, fh.next().strip().split(',')) )
+			# Ghosts spawns and current positions
+			for i in fh.next().strip().split(' '):
+				tmp = map(int, i.split(','))
+				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
+			for i in fh.next().strip().split(' '):
+				tmp = map(int, i.split(','))
+				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
+			# Map
+			l = 0
+			for line in fh:
+				words = line.strip().split(' ')
+				self.grid.append( [self.decodeCell(l, c, words[c]) for c in range(len(words))] )
+				l += 1
+		return True
+
+	def writeMap(self):
 		"""
 		Write the current map with the 'PacmanMap' code.
 		"""
@@ -63,11 +105,12 @@ class Map():
 		txt += "%s,%s\n" %(self.pacmanSpawn[0], self.pacmanSpawn[1])
 		txt += "%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
 		# Ghost spawns and positions
-		txt += "%s\n" %' '.join((["%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostSpawns.items()]))
-		txt += "%s\n" %' '.join((["%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostPositions.items()]))
+		txt += "%s\n" %' '.join((["%s,%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostSpawns.items()]))
+		txt += "%s\n" %' '.join((["%s,%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostPositions.items()]))
 		# Map
 		for i in self.grid:
 			for j in i:
+				# Type
 				if   j.getType() == UAG.CellTypeWall: txt += 'w'
 				elif j.getType() == UAG.CellTypePath: txt += 'p'
 				elif j.getType() == UAG.CellTypeGlass: txt += 'g'
@@ -76,9 +119,9 @@ class Map():
 				elif j.getItem() == UAG.CellItemPower: txt += 's'
 				elif j.getItem() == UAG.CellItemNone: txt += 'n'
 				# Character
-				if   j.getCharacter() == UAG.CellCharacterNone: txt += 'n'
-				elif j.getCharacter() == UAG.CellCharacterGhost: txt += 'g'
-				elif j.getCharacter() == UAG.CellCharacterPacman: txt += 'p'
+				if   j.getCharactersType(mostImportant=True) == UAG.CellCharacterGhost: txt += 'g'
+				elif j.getCharactersType(mostImportant=True) == UAG.CellCharacterPacman: txt += 'p'
+				else : txt += 'n'
 				txt += ' '
 			txt = txt[:-1]
 			txt += '\n'
@@ -120,50 +163,6 @@ class Map():
 	# ----------------------------------
 	# --- Common functions
 	# ----------------------------------
-	def decodeCell(self, code):
-		"""
-		Decode a 3-characters string encoding a cell's description.
-		"""
-		# Type
-		if   code[0] == 'w': Type = UAG.CellTypeWall
-		elif code[0] == 'p': Type = UAG.CellTypePath
-		elif code[0] == 'g': Type = UAG.CellTypeGlass
-		# Item
-		if   code[1] == 'p': Item = UAG.CellItemPoint
-		elif code[1] == 's': Item = UAG.CellItemPower
-		elif code[1] == 'n': Item = UAG.CellItemNone
-		# Character
-		if   code[2] == 'n': Char = UAG.CellCharacterNone
-		elif code[2] == 'g': Char = UAG.CellCharacterGhost
-		elif code[2] == 'p': Char = UAG.CellCharacterPacman
-		
-		return Cell(Type, Item, Char)
-
-	def loadMapFile(self, mapFile):
-		"""
-		Load a predefine map.
-		"""
-		# TODO Take care of ghosts and pacman spawn
-		self.grid = list()
-		with open(mapFile, 'r') as fh:
-			# Map size:
-			self.size = tuple( map(int, fh.next().strip().split(',')) )
-			# Pacman spawn and current position
-			self.pacmanSpawn = tuple( map(int, fh.next().strip().split(',')) )
-			self.pacmanPosition = tuple( map(int, fh.next().strip().split(',')) )
-			# Ghosts spawns and current positions
-#			self.dGhostPositions = {map(int, i.split(',')) for i in fh.next().strip().split(' ')}
-			for i in fh.next().strip().split(' '):
-				tmp = map(int, i.split(','))
-				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
-			for i in fh.next().strip().split(' '):
-				tmp = map(int, i.split(','))
-				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
-			# Map
-			for line in fh:
-				self.grid.append( [self.decodeCell(code) for code in line.strip().split(' ')] )
-		return True
-
 	def updateCellsAuthorizedMoves(self):
 		"""
 		For each cell of the grid, update his authorized moves.
@@ -187,14 +186,15 @@ class Map():
 		if direction in self.grid[From[0]][From[1]].getAuthorizedMoves(UAG.CellCharacterPacman): return True
 		return False
 
-	def moveAction(self, Who, To):
+	def actionCaused(self, Who, To):
 		"""
 		Return the action caused by the movement.
-		'Who': ID of the character
+		'Who': Pacman object or Ghost object
 		'To': position of the target Cell
 		"""
 		ToCell = self.getCell(To)
 		if (Who == UAG.CellCharacterGhost and ToCell.getCharacter() == UAG.CellCharacterPacman) or (Who == UAG.CellCharacterPacman and ToCell.getCharacter() == UAG.CellCharacterGhost):
+			
 			# Pacman meet a ghost
 			return UAG.ActionDie
 		# --- Pacman specials actions
@@ -231,8 +231,4 @@ class Map():
 		#TODO Verify if From and Ghosts positions are both tuples
 		if From not in self.dGhostPositions.values():
 			FromCell.setCharacter(UAG.CellCharacterNone)
-
-
-
-
 

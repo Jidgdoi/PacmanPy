@@ -9,11 +9,10 @@ import threading
 import Queue
 import time
 
-#from UtilsAndGlobal import *
 import UtilsAndGlobal as UAG
 from Cell import Cell
 from Map import Map
-from UI import UI
+from UI import UI, UICatcher
 from GhostAI import GhostAI
 from Graphical import Graphical
 
@@ -26,12 +25,54 @@ from Utility.Colors import *
 
 class Pacman():
 	"""
+	Object representing Pacman.
+	"""
+	def __init__(self, lives, state, points=0, direction=None):
+		self.character = UAG.CellCharacterPacman
+		self.ID = UAG.CellCharacterPacman
+		self.lives = lives
+		self.state = state
+		self.points = points
+		self.mvt = direction
+		self.countdownPower = 0.0
+
+	def __repr__(self):
+		return "\033[1;31m[%spts - %s lives]\033[0m" %(self.points, self.lives)
+
+	def setNewDirection(self, direction):
+		"""
+		Set the new direction of Pacman.
+		"""
+		self.mvt = direction
+
+	def pickPoint(self):
+		self.points += 1
+
+	def pickPower(self):
+		self.points += 10
+		self.state = UAG.PacmanOverPower
+		self.countdownPower = time.time() + UAG.powerTime
+
+	def endPower(self):
+		self.state = UAG.PacmanSafe
+		self.countdownPower = 0.0
+
+	def killGhost(self):
+		self.points += 100
+
+# ===================================
+#    ===   Class PacmanGame   ===
+# ===================================
+
+class PacmanGame():
+	"""
 	Main
 	"""
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, mapFile, dataQueue, threadLock, delay, objUI, objGhostAI):
+	def __init__(self, mapFile, dataQueue, threadLock, delay, objUI, objGhostAI, objPacman):
+		self.pacman = objPacman
 		self.dataQueue = dataQueue
 		self.threadLock = threadLock
 		self.delay = delay
@@ -39,20 +80,25 @@ class Pacman():
 		self.objGraphical = Graphical()
 		self.objUI = objUI
 		self.objGhostAI = objGhostAI
-		self.points = 0
+		
+		self._addObjCharacterToCells()
+
 
 	# ----------------------------------
 	# --- Private functions
 	# ----------------------------------
-	
-	# ----------------------------------
-	# --- Get functions
-	# ----------------------------------
-	
-	# ----------------------------------
-	# --- Set functions
-	# ----------------------------------
-	
+	def _addObjCharacterToCells(self):
+		"""
+		Just after initializing the map, add the obj characters to the corresponding cells.
+		"""
+		# Add Pacman
+		pacmanPos = self.objMap.getPacmanPosition()
+		self.objMap.getCell(pacmanPos).addCharacter(self.pacman)
+		# Add ghosts
+		for g in self.objGhostAI.dGhosts.values():
+			ghostPos = self.objMap.getGhostPosition(g.ID)
+			self.objMap.getCell(ghostPos).addCharacter(g)
+
 	# ----------------------------------
 	# --- Common functions
 	# ----------------------------------
@@ -64,15 +110,31 @@ class Pacman():
 		pacmanPos = self.objMap.getPacmanPosition()
 		nextCellPos = self.objMap.getNextCellPos(pacmanPos, direction)
 		
-		# If the move was correct
-		action = False
+		# --- If the move is correct
 		if self.objMap.isMovePossible(From=pacmanPos, direction=direction):
-			# Get action
-			action = self.objMap.moveAction(Who=UAG.CellCharacterPacman, To=nextCellPos)
-			# Make Pacman move by updating objMap
-			self.objMap.makeMove(From=pacmanPos, To=nextCellPos, Action=action)
-		
-		return action
+			nextCell = self.objMap.getCell(nextCellPos)
+			# Check for items
+			if nextCell.getItem() == UAG.CellItemPoint:
+				self.pacman.pickPoint()
+				nextCell.deleteItem()
+			elif nextCell.getItem() == UAG.CellItemPower:
+				self.pacman.pickPower()
+				nextCell.deleteItem()
+			# Check for ghost:
+			for c in nextCell.getCharactersObj():
+				if c.state == UAG.GhostAfraid:
+					self.pacman.killGhost()
+					c.die()
+				elif c.state == UAG.GhostAlive:
+					self.pacman.getKilled()
+					if self.pacman.lives == 0:
+						UAG.ExitFlag = 1
+						print "You lose."
+			# Update Pacman positions
+			self.pacman.setNewDirection(direction)
+			self.objMap.setPacmanPosition(nextCellPos)
+			# Update Cell's characters
+			nextCell.addCharacter(self.objMap.getCell(pacmanPos).popCharacter(self.pacman.ID))
 
 	def ghostMovement(self, objGhost):
 		"""
@@ -80,23 +142,27 @@ class Pacman():
 		"""
 		ghostPos = self.objMap.getGhostPosition(objGhost.ID)
 		cellGhost = self.objMap.getCell(ghostPos)
-		print objGhost
+		
 		# Define a direction for the ghost
-		if objGhost.state == UAG.GhostAlive:
-			direction = self.objGhostAI.randomMove(objGhost.mvt, cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost))
-		elif objGhost.state == UAG.GhostAfraid:
-			direction = self.objGhostAI.randomMove(objGhost.mvt, cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost))
-		else:
-			direction = self.objGhostAI.shortestPathTo(ghostPos)
+		direction = self.objGhostAI.directionFollowingState(objGhost, cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost))
 		
-		# Make the ghost move, update objMap and objGhost direction
 		nextCellPos = self.objMap.getNextCellPos(ghostPos, direction)
-		action = self.objMap.moveAction(Who=UAG.CellCharacterGhost, To=nextCellPos)
-		# Update cells
-		self.objMap.makeMove(From=ghostPos, To=nextCellPos, Action=action, GhostID=objGhost.ID)
+		nextCell = self.objMap.getCell(nextCellPos)
+		# Check for actions:
+		if UAG.CellCharacterPacman in nextCell.getCharactersType(mostImportant=True):
+			if objGhost.state == UAG.GhostAfraid:
+				self.pacman.killGhost()
+				objGhost.die()
+			elif objGhost.state == UAG.GhostAlive:
+				self.pacman.getKilled()
+				if self.pacman.lives == 0:
+					UAG.ExitFlag = 1
+					print "You lose."
+		# Update ghost positions
 		objGhost.setNewDirection(direction)
-		
-		return action
+		self.objMap.setGhostPosition(objGhost.ID, nextCellPos)
+		# Update Cell's characters
+		nextCell.addCharacter(cellGhost.popCharacter(objGhost.ID))
 
 	def analyzeQuery(self, query):
 		"""
@@ -110,12 +176,14 @@ class Pacman():
 			pass
 		# Update Game informations
 		if action == UAG.ActionPoint:
-			self.points += 1
-			print "Points: %s" %self.points
+			self.pacman.points += 1
+			print "Points: %s" %self.pacman.points
 		elif action == UAG.ActionPower:
-			self.points += 10
+			self.pacman.points += 10
 			self.objGhostAI.fearThem()
-		elif action == UAG.ActionDie:
+		elif action == UAG.ActionGhostDie:
+			self.query[0].die()
+		elif action == UAG.ActionLose:
 			UAG.ExitFlag = 1
 			print "You lose."
 
@@ -127,30 +195,26 @@ class Pacman():
 		mvt = True
 		c = 1
 		while not UAG.ExitFlag:
-			# Catch movement
-#			print "[Pacman] 1 - Get data from queue."
+			# Get data from queue
 			try:
 				query = self.dataQueue.get_nowait()
 			except :
-#				print "[Pacman] Queue.Empty()"
+				# Queue is empty: Query.Empty() exception but don't work
 				query = [None,None]
-#			query = self.dataQueue.get()
-#			print "[Pacman] 2 - Get data from queue."
 			# Analyse movement
-			if query[1] == False:
-				print "\033[1;31m[Pacman] Movement is False: ExitFlag\033[0m"
-				UAG.ExitFlag = 1
-			elif query[1] == None:
+			if query[1] == None:
 				pass
-#				print "Query None"
-#				time.sleep(self.delay)
+			elif query[1] == "Quit":
+				print "\033[1;31m[PacmanGame] Movement is False: ExitFlag\033[0m"
+				UAG.ExitFlag = 1
 			else:
 				self.analyzeQuery(query)
 				# Update screen every 4 moves
 				if c%4 == 0:
 					c = 0
 					self.threadLock.acquire()
-					print(chr(27) + "[2J")
+					# Clear screen
+#					print(chr(27) + "[2J")
 #					os.system('clear')
 					print self.objMap
 					self.threadLock.release()
@@ -168,28 +232,34 @@ if __name__=='__main__':
 	if len(sys.argv) == 2: mapFile = sys.argv[1]
 	else: mapFile = "%s%s%s" %(rootDir, os.sep, "data/defaultPacmanMap.map")
 	
-	# --- Initiate threads
+	# --- Initiate threads and the wx app
 	lock = threading.Lock()
 	queue = Queue.Queue(5)
 	
-	dThreads = {"Thread-UI":UI(1, "Thread-UI", queue, lock, UAG.PacmanDelay),
-	            "Thread-Ghost":GhostAI(2, "Thread-Ghost", queue, lock, UAG.GhostSpeed)}
-	print "[Pacman] Initiate threads"
-	for t in dThreads:
-		print "\t%s" %dThreads[t].name
-		dThreads[t].start()
+	objApp = wx.PySimpleApp()
+	objUI = UI(1, "Thread-UI", queue, lock, UAG.PacmanDelay)
+	objCatcher = UICatcher(2, "Thread-UICatcher", objApp, objUI)
+	objGhostAI = GhostAI(3, "Thread-Ghost", queue, lock, UAG.GhostSpeed)
+	
+	lThreads = [objUI, objCatcher, objGhostAI]
+	
+	print "[PacmanGame] Initiate threads"
+	for t in lThreads:
+		print "\t%s" %t.threadName
+		t.start()
 	
 	# --- Initiate game
-	game = Pacman(mapFile, queue, lock, UAG.PacmanDelay, objUI=dThreads["Thread-UI"], objGhostAI=dThreads["Thread-Ghost"])
+	objPacman = Pacman(lives=UAG.Lives, state=UAG.PacmanSafe)
+	game = PacmanGame(mapFile, queue, lock, UAG.PacmanDelay, objUI=objUI, objGhostAI=objGhostAI, objPacman=objPacman)
 	game.run()
 	
 	# --- Wait for all threads to terminate before leaving
-	print "[Pacman] Wait all threads before leaving"
-	for t in dThreads:
-		print "\t%s" %dThreads[t].name
-		dThreads[t].join()
+	print "[PacmanGame] Wait all threads before leaving"
+	for t in lThreads:
+		print "\t%s" %t.threadName
+		t.join()
 	
-	print "Exiting Pacman"
+	print "Exit Pacman"
 
 #os.system("gnome-terminal --geometry=60x20+2000+2000")
 

@@ -3,6 +3,8 @@
 # Cyril Fournier
 # 15/01/2016
 
+from wx import WXK_UP, WXK_DOWN, WXK_RIGHT, WXK_LEFT
+
 ######################
 # GLOBAL VARIABLES
 ######################
@@ -19,19 +21,24 @@ CellCharacterNone = 12568
 CellCharacterPacman = 18419
 CellCharacterGhost = 13012
 
-# --- Ghost ID
+# --- Pacman state
+PacmanSafe = 1
+PacmanOverPower = 42
+
+# --- Ghost state
 GhostAlive = 1
 GhostAfraid = 2
 GhostDead = 0
 
 # --- Movement
-MovementUp = 8
-MovementDown = 2
-MovementRight = 6
-MovementLeft = 4
+MovementUp = WXK_UP
+MovementDown = WXK_DOWN
+MovementRight = WXK_RIGHT
+MovementLeft = WXK_LEFT
 
 # --- Action
-ActionDie = 666
+ActionLose = 507317
+ActionGhostDie = 666
 ActionPoint = 117
 ActionPower = 777
 
@@ -39,7 +46,9 @@ ActionPower = 777
 ExitFlag = 0
 
 # --- Game control
-PacmanDelay = 0.05
+PacmanDelay = 0.2
 GhostSpeed = 1.0
+Lives = 3
+PowerTime = 10
 
 
