@@ -38,8 +38,9 @@ MovementLeft = WXK_LEFT
 # --- Action
 ActionLose = 507317
 ActionGhostDie = 666
-ActionLife = 117
 ActionPower = 777
+ActionLoseLife = 165
+ActionGetLife = 117
 
 # --- Threads
 ExitFlag = 0
@@ -49,6 +50,10 @@ PacmanDelay = 0.2
 GhostSpeed = 0.5
 FearTime = 10
 EventTextTime = 3
+LifeBonusThresh = 500
+PointReward = 1
+PowerReward = 10
+KillReward = 100
 
 # --- ASCII art
 GameOver="""
@@ -82,6 +87,14 @@ GhostKilledYou="""
  | |_| | | | | (_) \__ \ |_    |   <| | | |  __/ (_| |   | |_| | (_) | |_| |
   \____|_| |_|\___/|___/\__|   |_|\_\_|_|_|\___|\__,_|    \__, |\___/ \__,_|
                                                           |___/             
+"""
+Plus1LifeBonus="""
+          _     _     _  __          _                           
+    _    / |   | |   (_)/ _| ___    | |__   ___  _ __  _   _ ___ 
+  _| |_  | |   | |   | | |_ / _ \   | '_ \ / _ \| '_ \| | | / __|
+ |_   _| | |   | |___| |  _|  __/   | |_) | (_) | | | | |_| \__ \
+   |_|   |_|   |_____|_|_|  \___|   |_.__/ \___/|_| |_|\__,_|___/
+                                                                 
 """
 
 

@@ -50,19 +50,22 @@ class Pacman():
 		"""
 		self.mvt = direction
 
-	def pickPoint(self):
+	def pickPointReward(self):
 		self.points += 1
 
-	def pickPower(self):
+	def pickPowerReward(self):
 		self.points += 10
 
-	def killGhost(self):
+	def killGhostReward(self):
 		self.points += 100
 
 	def getKilled(self):
 		self.lives -= 1
 		if self.lives == 0: return True
 		return False
+
+	def getLifeBonus(self):
+		self.lives += 1
 
 # ===================================
 #    ===   Class PacmanGame   ===
@@ -158,7 +161,7 @@ class PacmanGame():
 			while not self.dataQueue.empty():
 				self.dataQueue.get()
 			self.threadLock.release()
-			return UAG.ActionLife
+			return UAG.ActionLoseLife
 
 	def analyzeQuery(self, query):
 		"""
@@ -174,13 +177,15 @@ class PacmanGame():
 		if not action: return ''
 		elif action == UAG.ActionPower: return UAG.Plus10Points
 		elif action == UAG.ActionGhostDie: return UAG.Plus100Points
-		elif action == UAG.ActionLife: return UAG.GhostKilledYou
+		elif action == UAG.ActionLoseLife: return UAG.GhostKilledYou
+		elif action == UAG.ActionGetLife: return UAG.Plus1LifeBonus
 		elif action == UAG.ActionLose: return UAG.GameOver
 
 	def checkCountdowns(self):
 		"""
 		Check ghosts' fear countdown.
 		"""
+		# Ghost fear countdown
 		for g in self.objGhostAI.dGhosts.values():
 			if g.countdownFear:
 				if time.time() > g.countdownFear:
@@ -204,22 +209,30 @@ class PacmanGame():
 			nextCell = self.objMap.getCell(nextCellPos)
 			# Check for items
 			if nextCell.getItem() == UAG.CellItemPoint:
-				self.pacman.pickPoint()
 				nextCell.deleteItem()
+				self.pacman.pickPointReward()
+				if (self.pacman.points%UAG.LifeBonusThresh - UAG.PointReward) < 0:
+					self.pacman.getLifeBonus()
+					action = UAG.ActionGetLife
 			elif nextCell.getItem() == UAG.CellItemPower:
-				self.pacman.pickPower()
-				self.objGhostAI.fearThem()
 				nextCell.deleteItem()
+				self.pacman.pickPowerReward()
+				self.objGhostAI.fearThem()
 				action = UAG.ActionPower
+				if (self.pacman.points%UAG.LifeBonusThresh - UAG.PowerReward) < 0:
+					self.pacman.getLifeBonus()
+					action = UAG.ActionGetLife
 			# Check for ghost:
 			for c in nextCell.getCharactersObj().values():
 				if c.state == UAG.GhostAfraid:
-					self.pacman.killGhost()
 					c.die()
+					self.pacman.killGhostReward()
 					action = UAG.ActionGhostDie
+					if (self.pacman.points%UAG.LifeBonusThresh - UAG.KillReward) < 0:
+						self.pacman.getLifeBonus()
+						action = UAG.ActionGetLife
 				elif c.state == UAG.GhostAlive:
-					action = self.pacmanGetKilled()
-					return action
+					return self.pacmanGetKilled()
 			# Update Pacman positions
 			self.pacman.setNewDirection(direction)
 			self.objMap.setPacmanPosition(nextCellPos)
@@ -243,12 +256,14 @@ class PacmanGame():
 		# Check for actions:
 		if UAG.CellCharacterPacman in nextCell.getCharactersType(mostImportant=True):
 			if objGhost.state == UAG.GhostAfraid:
-				self.pacman.killGhost()
 				objGhost.die()
+				self.pacman.killGhostReward()
 				action = UAG.ActionGhostDie
+				if (self.pacman.points%UAG.LifeBonusThresh - UAG.KillReward) < 0:
+					self.pacman.getLifeBonus()
+					action = UAG.ActionGetLife
 			elif objGhost.state == UAG.GhostAlive:
-				action = self.pacmanGetKilled()
-				return action
+				return self.pacmanGetKilled()
 		# Update ghost positions
 		objGhost.setNewDirection(direction)
 		self.objMap.setGhostPosition(objGhost.ID, nextCellPos)
