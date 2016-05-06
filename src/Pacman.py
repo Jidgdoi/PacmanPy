@@ -19,6 +19,11 @@ from Graphical import Graphical
 from Utility.MyToolbox import MyToolbox as MTB
 from Utility.Colors import *
 
+
+##########################################
+# TODO: Pacman doesn't have "Power", he just fear ghosts ! So delete power and just put a "feartime" for ghosts.
+##########################################
+
 # ===============================
 #    ===   Class Pacman   ===
 # ===============================
@@ -34,7 +39,6 @@ class Pacman():
 		self.state = state
 		self.points = points
 		self.mvt = direction
-		self.countdownPower = 0.0
 
 	def __repr__(self):
 		return "\033[1;31m[%spts - %s lives]\033[0m" %(self.points, self.lives)
@@ -50,15 +54,14 @@ class Pacman():
 
 	def pickPower(self):
 		self.points += 10
-		self.state = UAG.PacmanOverPower
-		self.countdownPower = time.time() + UAG.powerTime
-
-	def endPower(self):
-		self.state = UAG.PacmanSafe
-		self.countdownPower = 0.0
 
 	def killGhost(self):
 		self.points += 100
+
+	def getKilled(self):
+		self.lives -= 1
+		if self.lives == 0: return True
+		return False
 
 # ===================================
 #    ===   Class PacmanGame   ===
@@ -80,6 +83,8 @@ class PacmanGame():
 		self.objGraphical = Graphical()
 		self.objUI = objUI
 		self.objGhostAI = objGhostAI
+		self.eventText = ''
+		self.countdownEventText = 0.0
 		
 		self._addObjCharacterToCells()
 
@@ -100,12 +105,95 @@ class PacmanGame():
 			self.objMap.getCell(ghostPos).addCharacter(g)
 
 	# ----------------------------------
-	# --- Common functions
+	# --- Graphic functions
+	# ----------------------------------
+	def clearScreen(self):
+		print(chr(27) + "[2J")
+#		os.system('clear')
+
+	def printEvent(self, txt=''):
+		"""
+		Print the last event for 3 secondes
+		"""
+		if txt:
+			self.eventText = txt
+			self.countdownEventText = time.time() + UAG.EventTextTime
+		
+		if self.countdownEventText:
+			if time.time() < self.countdownEventText:
+				print self.eventText
+			else:
+				self.countdownEventText = 0.0
+
+	# ----------------------------------
+	# --- Game functions
+	# ----------------------------------
+	def pacmanGetKilled(self):
+		"""
+		Pacman lose a life. Every characters spawn to their respawn.
+		"""
+		print "\033[1;31mA ghost killed you: you lose a life.\033[0m"
+		if self.pacman.getKilled():
+			# Game end
+			UAG.ExitFlag = 1
+			return UAG.ActionLose
+		else:
+			# --- Ghosts
+			for i in self.objGhostAI.dGhosts.keys():
+				# Cell character
+				self.objMap.getCell(self.objMap.dGhostSpawns[i]).addCharacter(self.objMap.getCell(self.objMap.dGhostPositions[i]).popCharacter(i))
+				# Map position
+				self.objMap.dGhostPositions[i] = self.objMap.dGhostSpawns[i]
+				# Ghost state
+				self.objGhostAI.dGhosts[i].respawn()
+			# --- Pacman
+			# Cell character
+			self.objMap.getCell(self.objMap.pacmanSpawn).addCharacter(self.objMap.getCell(self.objMap.pacmanPosition).popCharacter(self.pacman.ID))
+			# Map position
+			self.objMap.pacmanPosition = self.objMap.pacmanSpawn
+			
+			# Free DataQueue
+			self.threadLock.acquire()
+			while not self.dataQueue.empty():
+				self.dataQueue.get()
+			self.threadLock.release()
+			return UAG.ActionLife
+
+	def analyzeQuery(self, query):
+		"""
+		Answer to the query.
+		"""
+		if query[0] == UAG.CellCharacterPacman:
+			action = self.pacmanMovement(query[1])
+		elif query[0] == UAG.CellCharacterGhost:
+			action = self.ghostMovement(query[1])
+		else:
+			pass
+		# --- Check action
+		if not action: return ''
+		elif action == UAG.ActionPower: return UAG.Plus10Points
+		elif action == UAG.ActionGhostDie: return UAG.Plus100Points
+		elif action == UAG.ActionLife: return UAG.GhostKilledYou
+		elif action == UAG.ActionLose: return UAG.GameOver
+
+	def checkCountdowns(self):
+		"""
+		Check ghosts' fear countdown.
+		"""
+		for g in self.objGhostAI.dGhosts.values():
+			if g.countdownFear:
+				if time.time() > g.countdownFear:
+					g.notAfraidAnymoreBitch()
+
+
+	# ----------------------------------
+	# --- Movement functions
 	# ----------------------------------
 	def pacmanMovement(self, direction):
 		"""
 		Make all modifications and actions to move Pacman to his new position.
 		"""
+		action = False
 		# --- Get both Pacman and his next cell positions
 		pacmanPos = self.objMap.getPacmanPosition()
 		nextCellPos = self.objMap.getNextCellPos(pacmanPos, direction)
@@ -119,27 +207,30 @@ class PacmanGame():
 				nextCell.deleteItem()
 			elif nextCell.getItem() == UAG.CellItemPower:
 				self.pacman.pickPower()
+				self.objGhostAI.fearThem()
 				nextCell.deleteItem()
+				action = UAG.ActionPower
 			# Check for ghost:
-			for c in nextCell.getCharactersObj():
+			for c in nextCell.getCharactersObj().values():
 				if c.state == UAG.GhostAfraid:
 					self.pacman.killGhost()
 					c.die()
+					action = UAG.ActionGhostDie
 				elif c.state == UAG.GhostAlive:
-					self.pacman.getKilled()
-					if self.pacman.lives == 0:
-						UAG.ExitFlag = 1
-						print "You lose."
+					action = self.pacmanGetKilled()
+					return action
 			# Update Pacman positions
 			self.pacman.setNewDirection(direction)
 			self.objMap.setPacmanPosition(nextCellPos)
 			# Update Cell's characters
 			nextCell.addCharacter(self.objMap.getCell(pacmanPos).popCharacter(self.pacman.ID))
+		return action
 
 	def ghostMovement(self, objGhost):
 		"""
 		Make all modifications and actions to move the ghosts to their new positions.
 		"""
+		action = False
 		ghostPos = self.objMap.getGhostPosition(objGhost.ID)
 		cellGhost = self.objMap.getCell(ghostPos)
 		
@@ -153,40 +244,16 @@ class PacmanGame():
 			if objGhost.state == UAG.GhostAfraid:
 				self.pacman.killGhost()
 				objGhost.die()
+				action = UAG.ActionGhostDie
 			elif objGhost.state == UAG.GhostAlive:
-				self.pacman.getKilled()
-				if self.pacman.lives == 0:
-					UAG.ExitFlag = 1
-					print "You lose."
+				action = self.pacmanGetKilled()
+				return action
 		# Update ghost positions
 		objGhost.setNewDirection(direction)
 		self.objMap.setGhostPosition(objGhost.ID, nextCellPos)
 		# Update Cell's characters
 		nextCell.addCharacter(cellGhost.popCharacter(objGhost.ID))
-
-	def analyzeQuery(self, query):
-		"""
-		Answer to the query.
-		"""
-		if query[0] == UAG.CellCharacterPacman:
-			action = self.pacmanMovement(query[1])
-		elif query[0] == UAG.CellCharacterGhost:
-			action = self.ghostMovement(query[1])
-		else:
-			pass
-		# Update Game informations
-		if action == UAG.ActionPoint:
-			self.pacman.points += 1
-			print "Points: %s" %self.pacman.points
-		elif action == UAG.ActionPower:
-			self.pacman.points += 10
-			self.objGhostAI.fearThem()
-		elif action == UAG.ActionGhostDie:
-			self.query[0].die()
-		elif action == UAG.ActionLose:
-			UAG.ExitFlag = 1
-			print "You lose."
-
+		return action
 
 	# ----------------------------------
 	# --- RUN
@@ -208,17 +275,21 @@ class PacmanGame():
 				print "\033[1;31m[PacmanGame] Movement is False: ExitFlag\033[0m"
 				UAG.ExitFlag = 1
 			else:
-				self.analyzeQuery(query)
+				if c%4 == 0 or query[0] == UAG.CellCharacterPacman:
+					self.clearScreen()
+				eventText = self.analyzeQuery(query)
 				# Update screen every 4 moves
-				if c%4 == 0:
+				if c%4 == 0 or query[0] == UAG.CellCharacterPacman or eventText:
 					c = 0
 					self.threadLock.acquire()
-					# Clear screen
-#					print(chr(27) + "[2J")
-#					os.system('clear')
+					self.printEvent(eventText)
 					print self.objMap
+					print "Lives left: %s\nPoints: %s" %(self.pacman.lives, self.pacman.points)
 					self.threadLock.release()
 				c += 1
+			
+			# Treat other game parameters independant from movement
+			self.checkCountdowns()
 		return
 
 if __name__=='__main__':

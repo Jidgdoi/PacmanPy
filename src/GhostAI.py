@@ -26,6 +26,7 @@ class Ghost():
 		self.state = state
 		self.color = color or "\033[1;3%sm" %random.choice([1,2,4,7])
 		self.mvt = UAG.MovementUp
+		self.countdownFear = 0.0
 
 	def __repr__(self):
 		return "%s%s\033[0m: %s" %(self.color, self.ID, "Alive" if self.state == 1 else "Afraid" if self.state == 2 else "Dead")
@@ -40,21 +41,34 @@ class Ghost():
 		"""
 		Change ghost's state to GhostAfraid and make him turn back.
 		"""
-		if self.state == GhostAlive:
-			self.state = GhostAfraid
+		if self.state == UAG.GhostAlive:
+			self.state = UAG.GhostAfraid
 			# Turn back
 			if self.mvt == UAG.MovementUp: self.mvt = UAG.MovementDown
 			elif self.mvt == UAG.MovementDown: self.mvt = UAG.MovementUp
 			elif self.mvt == UAG.MovementRight: self.mvt = UAG.MovementLeft
 			else: self.mvt = UAG.MovementRight
+			# Start FearTime countdown
+			self.countdownFear = time.time() + UAG.FearTime
 		else:
 			print "The ghost %s is not alive, he can't be afraid." %self.ID
+
+	def notAfraidAnymoreBitch(self):
+		"""
+		Ghost is not afraid anymore.
+		"""
+		if self.state == UAG.GhostAfraid:
+			self.state = UAG.GhostAlive
+			self.countdownFear = 0.0
+		else: print "The ghost %s is not afraid, he cann't be not afraid anymore." %self.ID
 
 	def die(self):
 		"""
 		Change ghost's state to GhostDead.
 		"""
-		if self.state == UAG.GhostAfraid: self.state = UAG.GhostDead
+		if self.state == UAG.GhostAfraid:
+			self.state = UAG.GhostDead
+			self.countdownFear = 0.0
 		else: print "The ghost %s is not afraid, he can't die." %self.ID
 
 	def resurect(self):
@@ -70,6 +84,14 @@ class Ghost():
 			else: self.mvt = UAG.MovementRight
 		else:
 			print "The ghost %s is not dead or afraid, he can't resurect." %self.ID
+
+	def respawn(self):
+		"""
+		Re-initialize ghost.
+		"""
+		self.state = UAG.GhostAlive
+		self.countdownFear = 0.0
+		self.mvt = UAG.MovementUp
 
 # ===============================
 #    ===   Class GhostAI   ===
@@ -114,7 +136,7 @@ class GhostAI(threading.Thread):
 		"""
 		The Pacman took a power, set all ghosts states to GhostAfraid.
 		"""
-		for g in self.dGhosts.values: g.booh()
+		for g in self.dGhosts.values(): g.booh()
 
 	# ----------------------------------
 	# --- Move functions
@@ -145,7 +167,7 @@ class GhostAI(threading.Thread):
 		elif ghost.state == UAG.GhostAfraid:
 			return self.randomMove(ghost.mvt, lCellAuthorizedMoves)
 		else:
-			return self.objGhostAI.shortestPathTo(ghostPos)
+			return self.shortestPathTo()
 
 	# ----------------------------------
 	# --- Run

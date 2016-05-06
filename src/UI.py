@@ -92,7 +92,7 @@ class UI(threading.Thread, wx.Frame):
 			if self.direction != "Wait":
 				query = [UAG.CellCharacterPacman, self.direction]
 				self.queueLock.acquire()
-				print "[objUI] 2 - Put movement in queue: [%s, %s]" %(query[0], query[1])
+#				print "[objUI] 2 - Put movement in queue: [%s, %s]" %(query[0], query[1])
 				self.queue.put(query)
 				self.queueLock.release()
 				self.direction = "Wait"

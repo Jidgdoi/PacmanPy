@@ -82,7 +82,7 @@ class Map():
 			# Ghosts spawns and current positions
 			for i in fh.next().strip().split(' '):
 				tmp = map(int, i.split(','))
-				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
+				self.dGhostSpawns[tmp[0]] = tuple(tmp[1:])
 			for i in fh.next().strip().split(' '):
 				tmp = map(int, i.split(','))
 				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
