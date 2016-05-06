@@ -21,7 +21,8 @@ from Utility.Colors import *
 
 
 ##########################################
-# TODO: Pacman doesn't have "Power", he just fear ghosts ! So delete power and just put a "feartime" for ghosts.
+# TODO: GhostAI movement when ghost die
+# TODO: Pause when lose a life
 ##########################################
 
 # ===============================
@@ -74,12 +75,12 @@ class PacmanGame():
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, mapFile, dataQueue, threadLock, delay, objUI, objGhostAI, objPacman):
-		self.pacman = objPacman
+	def __init__(self, mapFile, dataQueue, threadLock, delay, objUI, objGhostAI):
 		self.dataQueue = dataQueue
 		self.threadLock = threadLock
 		self.delay = delay
 		self.objMap = Map(mapFile)
+		self.pacman = Pacman(lives=self.objMap.playerLives, points=self.objMap.playerPoints, state=UAG.PacmanSafe)
 		self.objGraphical = Graphical()
 		self.objUI = objUI
 		self.objGhostAI = objGhostAI
@@ -262,18 +263,20 @@ class PacmanGame():
 		mvt = True
 		c = 1
 		while not UAG.ExitFlag:
-			# Get data from queue
+			# --- Get data from queue
 			try:
 				query = self.dataQueue.get_nowait()
 			except :
 				# Queue is empty: Query.Empty() exception but don't work
-				query = [None,None]
-			# Analyse movement
-			if query[1] == None:
-				pass
-			elif query[1] == "Quit":
+				continue
+			# --- Analyze event
+			if query[1] == "Quit":
 				print "\033[1;31m[PacmanGame] Movement is False: ExitFlag\033[0m"
 				UAG.ExitFlag = 1
+			elif query[1] == "Save":
+				fileName = "%s%sdata%ssave_%s.map" %(rootDir, os.sep, os.sep, time.strftime("%A_%d_%B-%Hh%Mm%S"))
+				print "\033[1;33m[PacmanGame] Save game to %s\033[0m" %fileName
+				self.objMap.writePacmanMap(fileName, self.pacman.points, self.pacman.lives)
 			else:
 				if c%4 == 0 or query[0] == UAG.CellCharacterPacman:
 					self.clearScreen()
@@ -320,8 +323,7 @@ if __name__=='__main__':
 		t.start()
 	
 	# --- Initiate game
-	objPacman = Pacman(lives=UAG.Lives, state=UAG.PacmanSafe)
-	game = PacmanGame(mapFile, queue, lock, UAG.PacmanDelay, objUI=objUI, objGhostAI=objGhostAI, objPacman=objPacman)
+	game = PacmanGame(mapFile, queue, lock, UAG.PacmanDelay, objUI=objUI, objGhostAI=objGhostAI)
 	game.run()
 	
 	# --- Wait for all threads to terminate before leaving

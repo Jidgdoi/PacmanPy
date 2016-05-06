@@ -46,8 +46,7 @@ ExitFlag = 0
 
 # --- Game control
 PacmanDelay = 0.2
-GhostSpeed = 1.0
-Lives = 3
+GhostSpeed = 0.5
 FearTime = 10
 EventTextTime = 3
 

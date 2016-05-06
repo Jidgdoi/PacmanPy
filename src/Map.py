@@ -30,24 +30,43 @@ class Map():
 		self.pacmanSpawn = list()
 		self.dGhostPositions = dict()
 		self.dGhostSpawns = dict()
+		self.nPoints = int()
+		self.playerPoints = int()
+		self.playerLives = int()
 		
-		# --- Load Map + Pacman/ghosts spawn|position
+		# --- Load Map + Pacman/ghosts spawn/position + count points
 		self.loadMapFile(mapFile)
 		
 		# --- Update cells authorized moves
 		self.updateCellsAuthorizedMoves()
 		
-		self.dColor = {UAG.CellItemNone: color()(" "),
-					   UAG.CellItemPoint: color(fgColor="yellow", bold=True)("o"),
+		self.dColor = {UAG.CellItemPoint: color(fgColor="yellow", bold=True)("o"),
 					   UAG.CellItemPower: color(fgColor="purple")("s"),
 					   UAG.CellCharacterPacman: color(fgColor="blue")("P"),
-					   UAG.CellCharacterGhost: color(fgColor="red", bold=True)("G"),
+					   UAG.GhostAlive: color(fgColor="red", bold=True)("G"),
+					   UAG.GhostAfraid: color(fgColor="blue", bold=True)("G"),
+					   UAG.GhostDead: color(fgColor="white", bold=True)("G"),
 					   UAG.CellTypeWall: color(fgColor="black", bgColor="black", bold=False)("W"),
 					   UAG.CellTypeGlass: color(bgColor="blue")(" "),
-					   UAG.CellTypePath: color(fgColor="black")(" ")}
+					   UAG.CellTypePath: color()(" ")}
 
 	def __repr__(self):
-		return '\n'.join( [' '.join( [self.dColor[j.toPrint()] for j in i] ) for i in self.grid] )
+#		return '\n'.join( [' '.join( [self.dColor[j.toPrint()] for j in i] ) for i in self.grid] )
+		txt = ''
+		for line in self.grid:
+			previousCellType = False
+			for cell in line:
+				if previousCellType:
+					# Space between 2 walls: set features wall for the space
+					if previousCellType == UAG.CellTypeWall and cell.getType() == UAG.CellTypeWall: txt += self.dColor[UAG.CellTypeWall]
+					# A glass: set both sides of glass as glass features
+					elif previousCellType == UAG.CellTypeGlass or cell.getType() == UAG.CellTypeGlass: txt += self.dColor[UAG.CellTypeGlass]
+					# Just a space
+					else: txt += ' '
+				txt += self.dColor[cell.toPrint()]
+				previousCellType = cell.getType()
+			txt += '\n'
+		return txt
 
 	# ----------------------------------
 	# --- PacmanMap functions
@@ -73,41 +92,69 @@ class Map():
 		"""
 		# TODO Take care of ghosts and pacman spawn
 		self.grid = list()
-		with open(mapFile, 'r') as fh:
+		fh = open(mapFile, 'r')
+		l = fh.readline()
+		while l:
+			while l:
+				print "2nd while"
+				if l[0] == "#":
+					header = l.strip()[1:]
+					break
+				else:
+					l = fh.readline()
+			print "header: %s" %header
+			print l
 			# Map size:
-			self.size = tuple( map(int, fh.next().strip().split(',')) )
+			if header == "Size":
+				self.size = tuple( map(int, fh.readline().strip().split(',')) )
 			# Pacman spawn and current position
-			self.pacmanSpawn = tuple( map(int, fh.next().strip().split(',')) )
-			self.pacmanPosition = tuple( map(int, fh.next().strip().split(',')) )
+			elif header == "PacmanSpawn":
+				self.pacmanSpawn = tuple( map(int, fh.readline().strip().split(',')) )
+			elif header == "PacmanPosition":
+				self.pacmanPosition = tuple( map(int, fh.readline().strip().split(',')) )
 			# Ghosts spawns and current positions
-			for i in fh.next().strip().split(' '):
-				tmp = map(int, i.split(','))
-				self.dGhostSpawns[tmp[0]] = tuple(tmp[1:])
-			for i in fh.next().strip().split(' '):
-				tmp = map(int, i.split(','))
-				self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
+			elif header == "GhostSpawns":
+				for i in fh.readline().strip().split(' '):
+					tmp = map(int, i.split(','))
+					self.dGhostSpawns[tmp[0]] = tuple(tmp[1:])
+			elif header == "GhostPositions":
+				for i in fh.readline().strip().split(' '):
+					tmp = map(int, i.split(','))
+					self.dGhostPositions[tmp[0]] = tuple(tmp[1:])
 			# Map
-			l = 0
-			for line in fh:
-				words = line.strip().split(' ')
-				self.grid.append( [self.decodeCell(l, c, words[c]) for c in range(len(words))] )
-				l += 1
+			elif header == "Map":
+				print range(self.size[0])
+				for i in range(self.size[0]):
+					words = fh.readline().strip().split(' ')
+					self.grid.append( [self.decodeCell(l, c, words[c]) for c in range(len(words))] )
+			elif header == "PlayerPoints":
+				self.playerPoints = int(fh.readline().strip())
+			elif header == "PlayerLives":
+				self.playerLives = int(fh.readline().strip())
+			else:
+				print "\033[1;31m[Map] Map loading error: '%s' header unknown." %header
+				sys.exit()
+			l = fh.readline()
+		fh.close()
+		# Count number of points
+		self.nPoints = sum( [sum([1 if cell.getItem() == UAG.CellItemPoint else 0 for cell in line]) for line in self.grid] )
 		return True
 
-	def writeMap(self):
+	def writePacmanMap(self, fileName, points, lives):
 		"""
 		Write the current map with the 'PacmanMap' code.
 		"""
 		txt = str()
 		# Size
-		txt += "%s,%s\n" %(self.size[0], self.size[1])
+		txt += "#Size\n%s,%s\n" %(self.size[0], self.size[1])
 		# Pacman spawn and position
-		txt += "%s,%s\n" %(self.pacmanSpawn[0], self.pacmanSpawn[1])
-		txt += "%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
+		txt += "#PacmanSpawn\n%s,%s\n" %(self.pacmanSpawn[0], self.pacmanSpawn[1])
+		txt += "#PacmanPosition\n%s,%s\n" %(self.pacmanPosition[0], self.pacmanPosition[1])
 		# Ghost spawns and positions
-		txt += "%s\n" %' '.join((["%s,%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostSpawns.items()]))
-		txt += "%s\n" %' '.join((["%s,%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostPositions.items()]))
+		txt += "#GhostSpawns\n%s\n" %' '.join((["%s,%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostSpawns.items()]))
+		txt += "#GhostPositions\n%s\n" %' '.join((["%s,%s,%s" %(k, v[0], v[1]) for k,v in self.dGhostPositions.items()]))
 		# Map
+		txt += "#Map\n"
 		for i in self.grid:
 			for j in i:
 				# Type
@@ -125,7 +172,14 @@ class Map():
 				txt += ' '
 			txt = txt[:-1]
 			txt += '\n'
-		return txt
+		# Player points
+		txt += "#PlayerPoints\n%s\n" %points
+		# Player lives
+		txt += "#PlayerLives\n%s\n" %lives
+		# Open and write to fileName
+		fh = open(fileName, 'w')
+		fh.write(txt)
+		fh.close()
 
 	# ----------------------------------
 	# --- Get functions

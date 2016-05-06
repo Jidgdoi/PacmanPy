@@ -1,8 +1,14 @@
+#Size
 21,19
+#PacmanSpawn
 15,9
+#PacmanPosition
 15,9
+#GhostSpawns
 0,8,9 1,9,8 2,9,9 3,9,10
+#GhostPositions
 0,8,9 1,9,8 2,9,9 3,9,10
+#Map
 wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn
 wnn ppn ppn ppn ppn ppn ppn ppn ppn wnn ppn ppn ppn ppn ppn ppn ppn ppn wnn
 wnn psn wnn wnn ppn wnn wnn wnn ppn wnn ppn wnn wnn wnn ppn wnn wnn psn wnn
@@ -24,3 +30,7 @@ wnn ppn ppn ppn ppn wnn ppn ppn ppn wnn ppn ppn ppn wnn ppn ppn ppn ppn wnn
 wnn ppn wnn wnn wnn wnn wnn wnn ppn wnn ppn wnn wnn wnn wnn wnn wnn ppn wnn
 wnn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn ppn wnn
 wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn
+#PlayerPoints
+0
+#PlayerLives
+3

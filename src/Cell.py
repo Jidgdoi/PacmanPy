@@ -101,7 +101,8 @@ class Cell():
 		Character > Item > Cell type
 		"""
 		if self.dCharactersObj.keys():
-			return self.getCharactersType(mostImportant=True)[0]
+			if self.dCharactersObj.has_key(UAG.CellCharacterPacman): return UAG.CellCharacterPacman
+			else: return self.dCharactersObj.values()[0].state
 		elif self.item != UAG.CellItemNone:
 			return self.item
 		else:

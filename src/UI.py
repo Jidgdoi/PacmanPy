@@ -44,7 +44,7 @@ class UI(threading.Thread, wx.Frame):
 	# --- Built-in functions
 	# ----------------------------------
 	def __init__(self, threadID, threadName, queue, queueLock, delay):
-		self.direction = "Wait"
+		self.order = "Wait"
 		# ========
 		# Thread init: send user's direction to the Pacman object.
 		# ========
@@ -76,11 +76,12 @@ class UI(threading.Thread, wx.Frame):
 		altDown = event.AltDown()
 		shiftDown = event.ShiftDown()
 		
-		if keycode == UAG.MovementUp: self.direction = UAG.MovementUp
-		elif keycode == UAG.MovementDown: self.direction = UAG.MovementDown
-		elif keycode == UAG.MovementRight: self.direction = UAG.MovementRight
-		elif keycode == UAG.MovementLeft: self.direction = UAG.MovementLeft
-		else: self.direction = "Quit"
+		if keycode == UAG.MovementUp: self.order = UAG.MovementUp
+		elif keycode == UAG.MovementDown: self.order = UAG.MovementDown
+		elif keycode == UAG.MovementRight: self.order = UAG.MovementRight
+		elif keycode == UAG.MovementLeft: self.order = UAG.MovementLeft
+		elif keycode == 115: self.order = "Save"
+		else: self.order = "Quit"
 		event.Skip()
 
 	# ----------------------------------
@@ -88,14 +89,14 @@ class UI(threading.Thread, wx.Frame):
 	# ----------------------------------
 	def run(self):
 		time.sleep(1)
-		while self.direction and not UAG.ExitFlag:
-			if self.direction != "Wait":
-				query = [UAG.CellCharacterPacman, self.direction]
+		while self.order and not UAG.ExitFlag:
+			if self.order != "Wait":
+				query = [UAG.CellCharacterPacman, self.order]
 				self.queueLock.acquire()
 #				print "[objUI] 2 - Put movement in queue: [%s, %s]" %(query[0], query[1])
 				self.queue.put(query)
 				self.queueLock.release()
-				self.direction = "Wait"
+				self.order = "Wait"
 			time.sleep(self.delay)
 		# Close frame
 		self.Close()

@@ -1,5 +1,6 @@
 # --- MY IGNORING FILES
 *~
+data/save_*.map
 # ---
 
 # Byte-compiled / optimized / DLL files
