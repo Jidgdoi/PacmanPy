@@ -27,6 +27,8 @@ class Cell():
 		self.item = item
 		self.dCharactersObj = dCharactersObj
 		self.dAuthorizedMoves = {}
+		self.dGhostResurectionPath = {}
+		self.dGhostResurectionDirection = {}
 
 	def __repr__(self):
 		t, i, c = MTB.getKey(vars(UAG), [self.type, self.item, self.character])
@@ -58,6 +60,13 @@ class Cell():
 		if Who == UAG.CellCharacterGhost:
 			return self.dAuthorizedMoves[UAG.CellCharacterGhost]
 		return self.dAuthorizedMoves[UAG.CellCharacterPacman]
+
+	def getGhostResurectionPath(self, Who):
+		"""
+		Return the resurection path' value of this cell for this ghost.
+		'Who': Ghost ID.
+		"""
+		return self.dGhostResurectionPath[Who]
 
 	# ----------------------------------
 	# --- Set functions

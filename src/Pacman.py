@@ -117,7 +117,7 @@ class PacmanGame():
 
 	def printEvent(self, txt=''):
 		"""
-		Print the last event for 3 secondes
+		Print the last event for 3 secondes.
 		"""
 		if txt:
 			self.eventText = txt
@@ -299,11 +299,11 @@ class PacmanGame():
 				# Update screen every 4 moves
 				if c%4 == 0 or query[0] == UAG.CellCharacterPacman or eventText:
 					c = 0
-					self.threadLock.acquire()
+#					self.threadLock.acquire()
 					self.printEvent(eventText)
 					print self.objMap
 					print "Lives left: %s\nPoints: %s" %(self.pacman.lives, self.pacman.points)
-					self.threadLock.release()
+#					self.threadLock.release()
 				c += 1
 			
 			# Treat other game parameters independant from movement

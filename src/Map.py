@@ -40,6 +40,9 @@ class Map():
 		# --- Update cells authorized moves
 		self.updateCellsAuthorizedMoves()
 		
+		# --- Update cells resurection paths
+		self.updateCellResurectionPath()
+		
 		self.dColor = {UAG.CellItemPoint: color(fgColor="yellow", bold=True)("o"),
 					   UAG.CellItemPower: color(fgColor="purple")("s"),
 					   UAG.CellCharacterPacman: color(fgColor="blue")("P"),
@@ -205,6 +208,13 @@ class Map():
 		elif direction == UAG.MovementLeft:  return (pos[0], (pos[1] -1)%self.size[1])
 		return False
 
+	def getCellNeighborsResurectionPath(self, pos, ghostID):
+		"""
+		Return for each neighbor's cell of the given one, the resurection path value for the given ghost.
+		"""
+		values = [(pos, self.getCell(self.getNextCellPos(pos, i)).getGhostResurectionPath(ghostID)) for i in self.getCell(pos).getAuthorizedMoves(UAG.CellCharacterGhost)]
+		return sorted(values, key = lambda x: x[1])
+
 	# ----------------------------------
 	# --- Set functions
 	# ----------------------------------
@@ -230,6 +240,31 @@ class Map():
 				cellLeft = self.grid[l][(c-1)%self.size[1]].getType()
 				# Update authorized moves
 				self.grid[l][c].updateAuthorizedMoves(cellUp, cellDown, cellRight, cellLeft)
+
+	def updateCellResurectionPath(self):
+		"""
+		For each cell of the grid, update his resurection path according to each ghost spawn.
+		"""
+		for ID,spawn in self.dGhostSpawns.items():
+			lCellToUpdate = [(spawn, 0)]
+			while lCellToUpdate:
+				tmp = []
+				for c in lCellToUpdate:
+					currCell = self.getCell(c[0])
+					# check if cell has been already updated for this ghost
+					if currCell.dGhostResurectionPath.has_key(ID):
+						continue
+					else:
+						# update cell resurection path for ghost 'ID'
+						currCell.dGhostResurectionPath[ID] = c[1]
+						# add all neighbors cells to the tmp CellToUpdate
+						tmp.extend([(self.getNextCellPos(c[0],i), c[1]+1) for i in currCell.getAuthorizedMoves(UAG.CellCharacterGhost)])
+				lCellToUpdate = tmp
+
+	def updateCellResurectionDirection(self):
+		"""
+		For each cell of the grid, update his resurection direction according to his neighbor.
+		"""
 
 	def isMovePossible(self, From, direction):
 		"""

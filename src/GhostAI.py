@@ -158,16 +158,16 @@ class GhostAI(threading.Thread):
 		"""
 		return
 
-	def directionFollowingState(self, ghost, lCellAuthorizedMoves):
+	def directionFollowingState(self, ghost, objCell):
 		"""
 		Return the new direction for a ghost following his state.
 		"""
 		if ghost.state == UAG.GhostAlive:
-			return self.randomMove(ghost.mvt, lCellAuthorizedMoves)
+			return self.randomMove(ghost.mvt, objCell.getAuthorizedMoves(UAG.CellCharacterGhost))
 		elif ghost.state == UAG.GhostAfraid:
-			return self.randomMove(ghost.mvt, lCellAuthorizedMoves)
+			return self.randomMove(ghost.mvt, objCell.getAuthorizedMoves(UAG.CellCharacterGhost))
 		else:
-			return self.shortestPathTo()
+			return self.shortestPathTo(objCell.get)
 
 	# ----------------------------------
 	# --- Run
