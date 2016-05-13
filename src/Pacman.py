@@ -180,6 +180,7 @@ class PacmanGame():
 		elif action == UAG.ActionLoseLife: return UAG.GhostKilledYou
 		elif action == UAG.ActionGetLife: return UAG.Plus1LifeBonus
 		elif action == UAG.ActionLose: return UAG.GameOver
+		elif action == UAG.ActionWin: return UAG.GameWin
 
 	def checkCountdowns(self):
 		"""
@@ -211,6 +212,9 @@ class PacmanGame():
 			if nextCell.getItem() == UAG.CellItemPoint:
 				nextCell.deleteItem()
 				self.pacman.pickPointReward()
+				if self.objMap.updatePointsLeft():
+					UAG.ExitFlag = 1
+					return UAG.ActionWin
 				if (self.pacman.points%UAG.LifeBonusThresh - UAG.PointReward) < 0:
 					self.pacman.getLifeBonus()
 					action = UAG.ActionGetLife
@@ -249,7 +253,10 @@ class PacmanGame():
 		cellGhost = self.objMap.getCell(ghostPos)
 		
 		# Define a direction for the ghost
-		direction = self.objGhostAI.directionFollowingState(objGhost, cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost))
+		if objGhost.state != UAG.GhostDead:
+			direction = self.objGhostAI.randomMove(objGhost.mvt, cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost))
+		else:
+			direction = cellGhost.getGhostResurectionDirection(objGhost.ID)
 		
 		nextCellPos = self.objMap.getNextCellPos(ghostPos, direction)
 		nextCell = self.objMap.getCell(nextCellPos)
@@ -264,6 +271,10 @@ class PacmanGame():
 					action = UAG.ActionGetLife
 			elif objGhost.state == UAG.GhostAlive:
 				return self.pacmanGetKilled()
+		# Check for ghost resurection
+		if nextCellPos == self.objMap.dGhostSpawns[objGhost.ID]:
+			objGhost.resurect()
+		
 		# Update ghost positions
 		objGhost.setNewDirection(direction)
 		self.objMap.setGhostPosition(objGhost.ID, nextCellPos)
@@ -306,7 +317,7 @@ class PacmanGame():
 #					self.threadLock.release()
 				c += 1
 			
-			# Treat other game parameters independant from movement
+			# --- Treat other game parameters independant from movement
 			self.checkCountdowns()
 		return
 

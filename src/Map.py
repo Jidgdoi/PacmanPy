@@ -30,7 +30,7 @@ class Map():
 		self.pacmanSpawn = list()
 		self.dGhostPositions = dict()
 		self.dGhostSpawns = dict()
-		self.nPoints = int()
+		self.pointsLeft = int()
 		self.playerPoints = int()
 		self.playerLives = int()
 		
@@ -40,9 +40,11 @@ class Map():
 		# --- Update cells authorized moves
 		self.updateCellsAuthorizedMoves()
 		
-		# --- Update cells resurection paths
-		self.updateCellResurectionPath()
+		# --- Update cells resurection distance and direction
+		self.updateCellResurectionDistance()
+		self.updateCellResurectionDirection()
 		
+		# --- Colors associated to each features.
 		self.dColor = {UAG.CellItemPoint: color(fgColor="yellow", bold=True)("o"),
 					   UAG.CellItemPower: color(fgColor="purple")("s"),
 					   UAG.CellCharacterPacman: color(fgColor="blue")("P"),
@@ -105,8 +107,6 @@ class Map():
 					break
 				else:
 					l = fh.readline()
-			print "header: %s" %header
-			print l
 			# Map size:
 			if header == "Size":
 				self.size = tuple( map(int, fh.readline().strip().split(',')) )
@@ -140,7 +140,7 @@ class Map():
 			l = fh.readline()
 		fh.close()
 		# Count number of points
-		self.nPoints = sum( [sum([1 if cell.getItem() == UAG.CellItemPoint else 0 for cell in line]) for line in self.grid] )
+		self.pointsLeft = sum( [sum([1 if cell.getItem() == UAG.CellItemPoint else 0 for cell in line]) for line in self.grid] )
 		return True
 
 	def writePacmanMap(self, fileName, points, lives):
@@ -225,7 +225,7 @@ class Map():
 		self.dGhostPositions[ID] = pos
 
 	# ----------------------------------
-	# --- Common functions
+	# --- Update functions
 	# ----------------------------------
 	def updateCellsAuthorizedMoves(self):
 		"""
@@ -241,9 +241,9 @@ class Map():
 				# Update authorized moves
 				self.grid[l][c].updateAuthorizedMoves(cellUp, cellDown, cellRight, cellLeft)
 
-	def updateCellResurectionPath(self):
+	def updateCellResurectionDistance(self):
 		"""
-		For each cell of the grid, update his resurection path according to each ghost spawn.
+		For each cell of the grid, update his resurection distance according to each ghost spawn.
 		"""
 		for ID,spawn in self.dGhostSpawns.items():
 			lCellToUpdate = [(spawn, 0)]
@@ -252,20 +252,44 @@ class Map():
 				for c in lCellToUpdate:
 					currCell = self.getCell(c[0])
 					# check if cell has been already updated for this ghost
-					if currCell.dGhostResurectionPath.has_key(ID):
+					if currCell.dGhostResurectionDistance.has_key(ID):
 						continue
 					else:
 						# update cell resurection path for ghost 'ID'
-						currCell.dGhostResurectionPath[ID] = c[1]
+						currCell.dGhostResurectionDistance[ID] = c[1]
 						# add all neighbors cells to the tmp CellToUpdate
 						tmp.extend([(self.getNextCellPos(c[0],i), c[1]+1) for i in currCell.getAuthorizedMoves(UAG.CellCharacterGhost)])
 				lCellToUpdate = tmp
 
 	def updateCellResurectionDirection(self):
 		"""
-		For each cell of the grid, update his resurection direction according to his neighbor.
+		For each cell of the grid, update his resurection direction according to his neighbors.
 		"""
+		for l in range(self.size[0]):
+			for c in range(self.size[1]):
+				for g in self.dGhostSpawns.keys():
+					# It's not a pathway
+					if self.grid[l][c].getGhostResurectionDistance(g) == UAG.CellDefaultResDist: continue
+					# Get cell's neighbors
+					cellUp = self.grid[(l-1)%self.size[0]][c].getGhostResurectionDistance(g)
+					cellDown = self.grid[(l+1)%self.size[0]][c].getGhostResurectionDistance(g)
+					cellRight = self.grid[l][(c+1)%self.size[1]].getGhostResurectionDistance(g)
+					cellLeft = self.grid[l][(c-1)%self.size[1]].getGhostResurectionDistance(g)
+					# Update dGhostResurectionDirection
+					self.grid[l][c].updateResurectionDirection(g, [cellUp, cellDown, cellRight, cellLeft])
 
+	def updatePointsLeft(self):
+		"""
+		Update self.pointsLeft, and return True if no points left.
+		"""
+		self.pointsLeft -= 1
+		if self.pointsLeft == 0: return True
+		return False
+
+
+	# ----------------------------------
+	# --- Common functions
+	# ----------------------------------
 	def isMovePossible(self, From, direction):
 		"""
 		Check if the movement is possible.

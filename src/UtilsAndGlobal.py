@@ -21,6 +21,8 @@ CellCharacterNone = 12568
 CellCharacterPacman = 18419
 CellCharacterGhost = 13012
 
+CellDefaultResDist = 1e10
+
 # --- Pacman state
 PacmanSafe = 1
 
@@ -41,6 +43,7 @@ ActionGhostDie = 666
 ActionPower = 777
 ActionLoseLife = 165
 ActionGetLife = 117
+ActionWin = 42
 
 # --- Threads
 ExitFlag = 0
@@ -63,6 +66,14 @@ GameOver="""
  | |_| | (_| | | | | | |  __/   | (_) \ V /  __/ |   
   \____|\__,_|_| |_| |_|\___|    \___/ \_/ \___|_|   
                                                      
+"""
+GameWin="""
+            __     __   __             __        ___           _      __           
+  _____ ____\ \    \ \ / /__  _   _    \ \      / (_)_ __     | |    / /____ _____ 
+ |_____|_____\ \    \ V / _ \| | | |    \ \ /\ / /| | '_ \    | |   / /_____|_____|
+ |_____|_____/ /     | | (_) | |_| |     \ V  V / | | | | |   |_|   \ \_____|_____|
+            /_/      |_|\___/ \__,_|      \_/\_/  |_|_| |_|   (_)    \_\           
+                                                                                   
 """
 Plus10Points="""
           _  ___      ____       _       _       

@@ -152,23 +152,6 @@ class GhostAI(threading.Thread):
 		if lDirection: return random.choice(lDirection)
 		else: return lCellAuthorizedMoves[0]
 
-	def shortestPathTo(self, target):
-		"""
-		Return the shortest path (list of movement) to the target.
-		"""
-		return
-
-	def directionFollowingState(self, ghost, objCell):
-		"""
-		Return the new direction for a ghost following his state.
-		"""
-		if ghost.state == UAG.GhostAlive:
-			return self.randomMove(ghost.mvt, objCell.getAuthorizedMoves(UAG.CellCharacterGhost))
-		elif ghost.state == UAG.GhostAfraid:
-			return self.randomMove(ghost.mvt, objCell.getAuthorizedMoves(UAG.CellCharacterGhost))
-		else:
-			return self.shortestPathTo(objCell.get)
-
 	# ----------------------------------
 	# --- Run
 	# ----------------------------------

@@ -27,7 +27,7 @@ class Cell():
 		self.item = item
 		self.dCharactersObj = dCharactersObj
 		self.dAuthorizedMoves = {}
-		self.dGhostResurectionPath = {}
+		self.dGhostResurectionDistance = {}
 		self.dGhostResurectionDirection = {}
 
 	def __repr__(self):
@@ -61,12 +61,18 @@ class Cell():
 			return self.dAuthorizedMoves[UAG.CellCharacterGhost]
 		return self.dAuthorizedMoves[UAG.CellCharacterPacman]
 
-	def getGhostResurectionPath(self, Who):
+	def getGhostResurectionDistance(self, ghostID):
 		"""
-		Return the resurection path' value of this cell for this ghost.
-		'Who': Ghost ID.
+		Return the resurection distance of this cell for this ghost.
 		"""
-		return self.dGhostResurectionPath[Who]
+		if self.dGhostResurectionDistance.has_key(ghostID): return self.dGhostResurectionDistance[ghostID]
+		return UAG.CellDefaultResDist
+
+	def getGhostResurectionDirection(self, ghostID):
+		"""
+		Return the direction to take for the ghost to return to his spawn.
+		"""
+		return self.dGhostResurectionDirection[ghostID]
 
 	# ----------------------------------
 	# --- Set functions
@@ -102,7 +108,21 @@ class Cell():
 				self.dAuthorizedMoves[UAG.CellCharacterGhost].append(d)
 			elif t == UAG.CellTypeGlass:
 				self.dAuthorizedMoves[UAG.CellCharacterGhost].append(d)
-		return
+
+	def updateResurectionDirection(self, ghostID, lResurectionDistance):
+		"""
+		Update the dictionary 'self.dGhostResurectionDirection', which contain the direction to take for dead ghost.
+		"""
+		
+		index = lResurectionDistance.index(min( lResurectionDistance ))
+		if index == 0:
+			self.dGhostResurectionDirection[ghostID] = UAG.MovementUp
+		elif index == 1:
+			self.dGhostResurectionDirection[ghostID] = UAG.MovementDown
+		elif index == 2:
+			self.dGhostResurectionDirection[ghostID] = UAG.MovementRight
+		else:
+			self.dGhostResurectionDirection[ghostID] = UAG.MovementLeft
 
 	def toPrint(self):
 		"""
