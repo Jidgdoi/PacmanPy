@@ -21,8 +21,10 @@ from Utility.Colors import *
 
 
 ##########################################
-# TODO: GhostAI movement when ghost die
 # TODO: Pause when lose a life
+# TODO: PacmanTracking functionality --> ghost can track Pacman when he's near them.
+#		or create a new "power" which instead of afraid ghosts, enraged them and track Pacman.
+# TODO: Begin graphical interface with wxPython
 ##########################################
 
 # ===============================
@@ -51,13 +53,13 @@ class Pacman():
 		self.mvt = direction
 
 	def pickPointReward(self):
-		self.points += 1
+		self.points += UAG.PointReward
 
 	def pickPowerReward(self):
-		self.points += 10
+		self.points += UAG.PowerReward
 
 	def killGhostReward(self):
-		self.points += 100
+		self.points += UAG.KillReward
 
 	def getKilled(self):
 		self.lives -= 1

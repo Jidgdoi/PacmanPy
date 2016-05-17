@@ -251,7 +251,7 @@ class Map():
 				tmp = []
 				for c in lCellToUpdate:
 					currCell = self.getCell(c[0])
-					# check if cell has been already updated for this ghost
+					# check if cell has already been updated for this ghost
 					if currCell.dGhostResurectionDistance.has_key(ID):
 						continue
 					else:
@@ -277,6 +277,23 @@ class Map():
 					cellLeft = self.grid[l][(c-1)%self.size[1]].getGhostResurectionDistance(g)
 					# Update dGhostResurectionDirection
 					self.grid[l][c].updateResurectionDirection(g, [cellUp, cellDown, cellRight, cellLeft])
+
+	def updateCellPacmanDistance(self):
+		"""
+		For each cell of the grid, update his distance from Pacman position.
+		"""
+		lCellToUpdate = [(self.pacmanPosition, 0)]
+		while lCellToUpdate:
+			tmp = []
+			for c in lCellToUpdate:
+				currCell = self.getCell(c[0])
+				# check if cell has not already been updated
+				if currCell.pacmanDistance != UAG.CellDefaultPacmanDist:
+					# update cell resurection path for ghost 'ID'
+					currCell.dGhostResurectionDistance[ID] = c[1]
+					# add all neighbors cells to the tmp CellToUpdate
+					tmp.extend([(self.getNextCellPos(c[0],i), c[1]+1) for i in currCell.getAuthorizedMoves(UAG.CellCharacterGhost)])
+			lCellToUpdate = tmp
 
 	def updatePointsLeft(self):
 		"""

@@ -50,7 +50,7 @@ ExitFlag = 0
 
 # --- Game control
 PacmanDelay = 0.2
-GhostSpeed = 0.4
+GhostSpeed = 0.3
 FearTime = 10
 EventTextTime = 3
 LifeBonusThresh = 500
@@ -59,6 +59,8 @@ PowerReward = 10
 KillReward = 100
 
 # --- ASCII art
+# "Language": Ivrit
+# Source: http://www.patorjk.com/software/taag/#p=display&f=Ivrit&t=Type%20Something%20
 GameOver="""
    ____                                              
   / ___| __ _ _ __ ___   ___      _____   _____ _ __ 
