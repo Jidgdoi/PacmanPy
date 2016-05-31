@@ -205,11 +205,10 @@ class PacmanGame():
 		action = False
 		# --- Get both Pacman and his next cell positions
 		pacmanPos = self.objMap.getPacmanPosition()
-		nextCellPos = self.objMap.getNextCellPos(pacmanPos, direction)
+		nextCell = self.objMap.getNextCell(pacmanPos, direction, False)
 		
 		# --- If the move is correct
 		if self.objMap.isMovePossible(From=pacmanPos, direction=direction):
-			nextCell = self.objMap.getCell(nextCellPos)
 			# Check for items
 			if nextCell.getItem() == UAG.CellItemPoint:
 				nextCell.deleteItem()
@@ -241,7 +240,8 @@ class PacmanGame():
 					return self.pacmanGetKilled()
 			# Update Pacman positions
 			self.pacman.setNewDirection(direction)
-			self.objMap.setPacmanPosition(nextCellPos)
+			self.objMap.setPacmanPosition(nextCell.pos)
+			self.objMap.updateCellsPacmanDistance()
 			# Update Cell's characters
 			nextCell.addCharacter(self.objMap.getCell(pacmanPos).popCharacter(self.pacman.ID))
 		return action
@@ -256,12 +256,17 @@ class PacmanGame():
 		
 		# Define a direction for the ghost
 		if objGhost.state != UAG.GhostDead:
-			direction = self.objGhostAI.randomMove(objGhost.mvt, cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost))
+			if UAG.GhostPredator:
+				direction = self.objGhostAI.predatorMove(objGhost.mvt,
+														 cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost),
+														 self.objMap.getNeighborsPacmanDist(cellGhost))
+			else:
+				direction = self.objGhostAI.randomMove(objGhost.mvt,
+													   cellGhost.getAuthorizedMoves(UAG.CellCharacterGhost))
 		else:
-			direction = cellGhost.getGhostResurectionDirection(objGhost.ID)
+			direction = cellGhost.getGSpawnDirection(objGhost.ID)
 		
-		nextCellPos = self.objMap.getNextCellPos(ghostPos, direction)
-		nextCell = self.objMap.getCell(nextCellPos)
+		nextCell = self.objMap.getNextCell(ghostPos, direction, False)
 		# Check for actions:
 		if UAG.CellCharacterPacman in nextCell.getCharactersType(mostImportant=True):
 			if objGhost.state == UAG.GhostAfraid:
@@ -274,12 +279,12 @@ class PacmanGame():
 			elif objGhost.state == UAG.GhostAlive:
 				return self.pacmanGetKilled()
 		# Check for ghost resurection
-		if nextCellPos == self.objMap.dGhostSpawns[objGhost.ID]:
+		if nextCell.pos == self.objMap.dGhostSpawns[objGhost.ID]:
 			objGhost.resurect()
 		
 		# Update ghost positions
 		objGhost.setNewDirection(direction)
-		self.objMap.setGhostPosition(objGhost.ID, nextCellPos)
+		self.objMap.setGhostPosition(objGhost.ID, nextCell.pos)
 		# Update Cell's characters
 		nextCell.addCharacter(cellGhost.popCharacter(objGhost.ID))
 		return action

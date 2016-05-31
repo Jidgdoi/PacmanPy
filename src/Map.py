@@ -41,8 +41,8 @@ class Map():
 		self.updateCellsAuthorizedMoves()
 		
 		# --- Update cells resurection distance and direction
-		self.updateCellResurectionDistance()
-		self.updateCellResurectionDirection()
+		self.updateCellsGSpawnDistance()
+		self.updateCellsGSpawnDirection()
 		
 		# --- Colors associated to each features.
 		self.dColor = {UAG.CellItemPoint: color(fgColor="yellow", bold=True)("o"),
@@ -129,7 +129,7 @@ class Map():
 				print range(self.size[0])
 				for i in range(self.size[0]):
 					words = fh.readline().strip().split(' ')
-					self.grid.append( [self.decodeCell(l, c, words[c]) for c in range(len(words))] )
+					self.grid.append( [self.decodeCell(i, c, words[c]) for c in range(len(words))] )
 			elif header == "PlayerPoints":
 				self.playerPoints = int(fh.readline().strip())
 			elif header == "PlayerLives":
@@ -196,24 +196,34 @@ class Map():
 	def getCell(self, pos):
 		return self.grid[pos[0]][pos[1]]
 
-	def getNextCellPos(self, pos, direction):
+	def getNextCell(self, info, direction, returnPos=True):
 		"""
-		Return the coordinates of the next cell.
-		'pos': tuple of int - the position
-		'direction': direction movement (MovementUp, MovementDown, MovementRight, MovementLeft).
+		Return the position of the next cell |OR| the next object Cell.
+		'info': tuple of int - the position |OR| an object Cell
+		'direction': direction movement (MovementUp, MovementDown, MovementRight, MovementLeft)
+		'returnPos': will return the position if set to True, otherwise will return the Cell object
 		"""
-		if direction == UAG.MovementUp:      return ((pos[0] -1)%self.size[0], pos[1])
-		elif direction == UAG.MovementDown:  return ((pos[0] +1)%self.size[0], pos[1])
-		elif direction == UAG.MovementRight: return (pos[0], (pos[1] +1)%self.size[1])
-		elif direction == UAG.MovementLeft:  return (pos[0], (pos[1] -1)%self.size[1])
-		return False
+		# Analyze input
+		if isinstance(info, tuple): pos = info
+		else: pos = info.pos
+		# Find next cell and compute position
+		if direction == UAG.MovementUp:      xy = ((pos[0] -1)%self.size[0], pos[1])
+		elif direction == UAG.MovementDown:  xy = ((pos[0] +1)%self.size[0], pos[1])
+		elif direction == UAG.MovementRight: xy = (pos[0], (pos[1] +1)%self.size[1])
+		elif direction == UAG.MovementLeft:  xy = (pos[0], (pos[1] -1)%self.size[1])
+		# Return no found
+		else: return False
+		# Return position
+		if returnPos: return xy
+		# Return object Cell
+		else: return self.getCell(xy)
 
-	def getCellNeighborsResurectionPath(self, pos, ghostID):
+	def getNeighborsPacmanDist(self, cell):
 		"""
-		Return for each neighbor's cell of the given one, the resurection path value for the given ghost.
+		Return a list of tuple of the 'PacmanDistance' value and direction of each cell's neighors.
 		"""
-		values = [(pos, self.getCell(self.getNextCellPos(pos, i)).getGhostResurectionPath(ghostID)) for i in self.getCell(pos).getAuthorizedMoves(UAG.CellCharacterGhost)]
-		return sorted(values, key = lambda x: x[1])
+		lMoves = cell.getAuthorizedMoves(UAG.CellCharacterPacman)
+		return [(self.getNextCell(cell, m, False).getPacmanDistance(), m) for m in lMoves]
 
 	# ----------------------------------
 	# --- Set functions
@@ -241,9 +251,9 @@ class Map():
 				# Update authorized moves
 				self.grid[l][c].updateAuthorizedMoves(cellUp, cellDown, cellRight, cellLeft)
 
-	def updateCellResurectionDistance(self):
+	def updateCellsGSpawnDistance(self):
 		"""
-		For each cell of the grid, update his resurection distance according to each ghost spawn.
+		For each cell of the grid, update his spawn distance according to each ghost spawn.
 		"""
 		for ID,spawn in self.dGhostSpawns.items():
 			lCellToUpdate = [(spawn, 0)]
@@ -252,16 +262,16 @@ class Map():
 				for c in lCellToUpdate:
 					currCell = self.getCell(c[0])
 					# check if cell has already been updated for this ghost
-					if currCell.dGhostResurectionDistance.has_key(ID):
+					if currCell.dGSpawnDistance.has_key(ID):
 						continue
 					else:
-						# update cell resurection path for ghost 'ID'
-						currCell.dGhostResurectionDistance[ID] = c[1]
+						# update cell spawn path for ghost 'ID'
+						currCell.dGSpawnDistance[ID] = c[1]
 						# add all neighbors cells to the tmp CellToUpdate
-						tmp.extend([(self.getNextCellPos(c[0],i), c[1]+1) for i in currCell.getAuthorizedMoves(UAG.CellCharacterGhost)])
+						tmp.extend([(self.getNextCell(c[0], m), c[1]+1) for m in currCell.getAuthorizedMoves(UAG.CellCharacterGhost)])
 				lCellToUpdate = tmp
 
-	def updateCellResurectionDirection(self):
+	def updateCellsGSpawnDirection(self):
 		"""
 		For each cell of the grid, update his resurection direction according to his neighbors.
 		"""
@@ -269,31 +279,39 @@ class Map():
 			for c in range(self.size[1]):
 				for g in self.dGhostSpawns.keys():
 					# It's not a pathway
-					if self.grid[l][c].getGhostResurectionDistance(g) == UAG.CellDefaultResDist: continue
+					if self.grid[l][c].getGSpawnDistance(g) == UAG.CellDefaultGSpawnDist: continue
 					# Get cell's neighbors
-					cellUp = self.grid[(l-1)%self.size[0]][c].getGhostResurectionDistance(g)
-					cellDown = self.grid[(l+1)%self.size[0]][c].getGhostResurectionDistance(g)
-					cellRight = self.grid[l][(c+1)%self.size[1]].getGhostResurectionDistance(g)
-					cellLeft = self.grid[l][(c-1)%self.size[1]].getGhostResurectionDistance(g)
-					# Update dGhostResurectionDirection
-					self.grid[l][c].updateResurectionDirection(g, [cellUp, cellDown, cellRight, cellLeft])
+					cellUp = self.grid[(l-1)%self.size[0]][c].getGSpawnDistance(g)
+					cellDown = self.grid[(l+1)%self.size[0]][c].getGSpawnDistance(g)
+					cellRight = self.grid[l][(c+1)%self.size[1]].getGSpawnDistance(g)
+					cellLeft = self.grid[l][(c-1)%self.size[1]].getGSpawnDistance(g)
+					# Update dGSpawnDirection
+					self.grid[l][c].updateGSpawnDirection(g, [cellUp, cellDown, cellRight, cellLeft])
 
-	def updateCellPacmanDistance(self):
+	def updateCellsPacmanDistance(self):
 		"""
 		For each cell of the grid, update his distance from Pacman position.
 		"""
+		# First: reset "pacmanDistance" values for each cell.
+		for l in self.grid:
+			for c in l:
+				c.pacmanDistance = UAG.CellDefaultPacmanDist
+		# Second: update "pacmanDistance" values for each cell.
 		lCellToUpdate = [(self.pacmanPosition, 0)]
 		while lCellToUpdate:
 			tmp = []
 			for c in lCellToUpdate:
 				currCell = self.getCell(c[0])
 				# check if cell has not already been updated
-				if currCell.pacmanDistance != UAG.CellDefaultPacmanDist:
-					# update cell resurection path for ghost 'ID'
-					currCell.dGhostResurectionDistance[ID] = c[1]
+				if currCell.pacmanDistance > c[1]:
+					currCell.pacmandDistance = c[1]
 					# add all neighbors cells to the tmp CellToUpdate
-					tmp.extend([(self.getNextCellPos(c[0],i), c[1]+1) for i in currCell.getAuthorizedMoves(UAG.CellCharacterGhost)])
+					tmp.extend([(self.getNextCell(c[0], m), c[1]+1) for m in currCell.getAuthorizedMoves(UAG.CellCharacterPacman)])
+					print currCell.pacmanDistance
+					print c[1]
+				print len(tmp)
 			lCellToUpdate = tmp
+			lCellToUpdate = []
 
 	def updatePointsLeft(self):
 		"""

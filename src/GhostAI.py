@@ -152,6 +152,21 @@ class GhostAI(threading.Thread):
 		if lDirection: return random.choice(lDirection)
 		else: return lCellAuthorizedMoves[0]
 
+	def predatorMove(self, direction, lCellAuthorizedMoves, lCellPacmanDistance):
+		"""
+		Return the new direction for a ghost, which is predating the Pacman.
+		'direction': current ghost direction
+		'lCellAuthorizedMoves': list of authorized moves from the current cell
+		'lCellPacmanDistance': list of distance of cell's neighbors.
+		"""
+		predatorDirection = min(lCellPacmanDistance, key=lambda x: x[0])
+		print "[GhostAI] predatorDirection:", predatorDirection
+		# Return predator move
+		if predatorDirection[0] <= UAG.GhostSmell:
+			return predatorDirection[1]
+		# Return random move
+		return self.randomMove(direction, lCellAuthorizedMoves)
+
 	# ----------------------------------
 	# --- Run
 	# ----------------------------------

@@ -21,7 +21,8 @@ CellCharacterNone = 12568
 CellCharacterPacman = 18419
 CellCharacterGhost = 13012
 
-CellDefaultResDist = 1e10
+CellDefaultGSpawnDist = 1e10
+CellDefaultPacmanDist = 1e10
 
 # --- Pacman state
 PacmanSafe = 1
@@ -48,15 +49,19 @@ ActionWin = 42
 # --- Threads
 ExitFlag = 0
 
-# --- Game control
-PacmanDelay = 0.2
-GhostSpeed = 0.3
-FearTime = 10
+# --- Game controls
 EventTextTime = 3
 LifeBonusThresh = 500
 PointReward = 1
 PowerReward = 10
 KillReward = 100
+
+# --- Game difficulties options
+PacmanDelay = 0.2
+GhostSpeed = 0.3
+FearTime = 10
+GhostPredator = 1
+GhostSmell = 5
 
 # --- ASCII art
 # "Language": Ivrit

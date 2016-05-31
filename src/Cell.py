@@ -27,11 +27,12 @@ class Cell():
 		self.item = item
 		self.dCharactersObj = dCharactersObj
 		self.dAuthorizedMoves = {}
-		self.dGhostResurectionDistance = {}
-		self.dGhostResurectionDirection = {}
+		self.dGSpawnDistance = {}
+		self.dGSpawnDirection = {}
+		self.pacmanDistance = UAG.CellDefaultPacmanDist
 
 	def __repr__(self):
-		t, i, c = MTB.getKey(vars(UAG), [self.type, self.item, self.character])
+		t, i, c = MTB.getKey(vars(UAG), [self.type, self.item, self.getCharactersType(True)[0]])
 		return "(%s,%s,%s)" %(t, i, c)
 
 	# ----------------------------------
@@ -61,18 +62,24 @@ class Cell():
 			return self.dAuthorizedMoves[UAG.CellCharacterGhost]
 		return self.dAuthorizedMoves[UAG.CellCharacterPacman]
 
-	def getGhostResurectionDistance(self, ghostID):
+	def getGSpawnDistance(self, ghostID):
 		"""
 		Return the resurection distance of this cell for this ghost.
 		"""
-		if self.dGhostResurectionDistance.has_key(ghostID): return self.dGhostResurectionDistance[ghostID]
-		return UAG.CellDefaultResDist
+		if self.dGSpawnDistance.has_key(ghostID): return self.dGSpawnDistance[ghostID]
+		return UAG.CellDefaultGSpawnDist
 
-	def getGhostResurectionDirection(self, ghostID):
+	def getGSpawnDirection(self, ghostID):
 		"""
 		Return the direction to take for the ghost to return to his spawn.
 		"""
-		return self.dGhostResurectionDirection[ghostID]
+		return self.dGSpawnDirection[ghostID]
+
+	def getPacmanDistance(self):
+		"""
+		Return the pacmanDistance value for this cell.
+		"""
+		return self.pacmanDistance
 
 	# ----------------------------------
 	# --- Set functions
@@ -109,20 +116,19 @@ class Cell():
 			elif t == UAG.CellTypeGlass:
 				self.dAuthorizedMoves[UAG.CellCharacterGhost].append(d)
 
-	def updateResurectionDirection(self, ghostID, lResurectionDistance):
+	def updateGSpawnDirection(self, ghostID, lGSpawnDistance):
 		"""
-		Update the dictionary 'self.dGhostResurectionDirection', which contain the direction to take for dead ghost.
+		Update the dictionary 'self.dGSpawnDirection', which contain the direction to take for dead ghost.
 		"""
-		
-		index = lResurectionDistance.index(min( lResurectionDistance ))
+		index = lGSpawnDistance.index(min( lGSpawnDistance ))
 		if index == 0:
-			self.dGhostResurectionDirection[ghostID] = UAG.MovementUp
+			self.dGSpawnDirection[ghostID] = UAG.MovementUp
 		elif index == 1:
-			self.dGhostResurectionDirection[ghostID] = UAG.MovementDown
+			self.dGSpawnDirection[ghostID] = UAG.MovementDown
 		elif index == 2:
-			self.dGhostResurectionDirection[ghostID] = UAG.MovementRight
+			self.dGSpawnDirection[ghostID] = UAG.MovementRight
 		else:
-			self.dGhostResurectionDirection[ghostID] = UAG.MovementLeft
+			self.dGSpawnDirection[ghostID] = UAG.MovementLeft
 
 	def toPrint(self):
 		"""
