@@ -1,0 +1,36 @@
+#Size
+21,19
+#PacmanSpawn
+15,9
+#PacmanPosition
+17,14
+#GhostSpawns
+0,8,9 1,9,8 2,9,9 3,9,10
+#GhostPositions
+0,9,2 1,9,17 2,1,7 3,5,3
+#Map
+wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn
+wnn ppn ppn ppn ppn ppn ppn ppn ppn wnn pnn pnn pnn pnn pnn pnn pnn pnn wnn
+wnn psn wnn wnn ppn wnn wnn wnn ppn wnn pnn wnn wnn wnn pnn wnn wnn pnn wnn
+wnn ppn ppn ppn ppn ppn ppn ppn ppn ppn pnn pnn pnn pnn pnn pnn pnn pnn wnn
+wnn ppn wnn wnn ppn wnn ppn wnn wnn wnn wnn wnn ppn wnn pnn wnn wnn pnn wnn
+wnn ppn ppn ppn ppn wnn ppn ppn ppn wnn ppn ppn ppn wnn pnn pnn pnn pnn wnn
+wnn wnn wnn wnn ppn wnn wnn wnn ppn wnn ppn wnn wnn wnn pnn wnn wnn wnn wnn
+wnn wnn wnn wnn ppn wnn ppn ppn ppn ppn ppn pnn pnn wnn pnn wnn wnn wnn wnn
+wnn wnn wnn wnn ppn wnn ppn wnn wnn gnn wnn wnn pnn wnn pnn wnn wnn wnn wnn
+pnn pnn pnn pnn pnn ppn ppn wnn pnn pnn pnn wnn pnn pnn pnn pnn pnn pnn pnn
+wnn wnn wnn wnn pnn wnn ppn wnn wnn wnn wnn wnn pnn wnn pnn wnn wnn wnn wnn
+wnn wnn wnn wnn pnn wnn ppn ppn ppn ppn ppn ppn pnn wnn pnn wnn wnn wnn wnn
+wnn wnn wnn wnn pnn wnn ppn wnn wnn wnn wnn wnn pnn wnn pnn wnn wnn wnn wnn
+wnn pnn pnn pnn pnn ppn ppn ppn ppn wnn ppn ppn pnn pnn pnn pnn pnn pnn wnn
+wnn pnn wnn wnn pnn wnn wnn wnn ppn wnn ppn wnn wnn wnn pnn wnn wnn pnn wnn
+wnn pnn pnn wnn pnn pnn pnn pnn pnn pnn ppn ppn pnn pnn pnn wnn pnn pnn wnn
+wnn wnn pnn wnn pnn wnn pnn wnn wnn wnn wnn wnn pnn wnn pnn wnn pnn wnn wnn
+wnn pnn pnn pnn pnn wnn pnn pnn pnn wnn pnn pnn pnn wnn pnn pnn pnn pnn wnn
+wnn pnn wnn wnn wnn wnn wnn wnn pnn wnn pnn wnn wnn wnn wnn wnn wnn pnn wnn
+wnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn pnn wnn
+wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn wnn
+#PlayerPoints
+346
+#PlayerLives
+3

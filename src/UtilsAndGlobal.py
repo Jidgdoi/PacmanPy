@@ -50,18 +50,20 @@ ActionWin = 42
 ExitFlag = 0
 
 # --- Game controls
+PacmanDelay = 0.2
 EventTextTime = 3
 LifeBonusThresh = 500
 PointReward = 1
 PowerReward = 10
 KillReward = 100
+DefaultMap = "map/defaultPacmanMap.map"
 
 # --- Game difficulties options
-PacmanDelay = 0.2
 GhostSpeed = 0.3
 FearTime = 10
 GhostPredator = 1
 GhostSmell = 5
+StartLife = 3
 
 # --- ASCII art
 # "Language": Ivrit

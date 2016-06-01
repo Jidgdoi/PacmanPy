@@ -91,6 +91,9 @@ class Cell():
 	def addCharacter(self, new):
 		self.dCharactersObj[new.ID] = new
 
+	def setPacmanDistance(self, new):
+		self.pacmanDistance = new
+
 	# ----------------------------------
 	# --- Common functions
 	# ----------------------------------

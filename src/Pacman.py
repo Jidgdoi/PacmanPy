@@ -80,11 +80,11 @@ class PacmanGame():
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, mapFile, dataQueue, threadLock, delay, objUI, objGhostAI):
+	def __init__(self, objMap, dataQueue, threadLock, delay, objUI, objGhostAI):
 		self.dataQueue = dataQueue
 		self.threadLock = threadLock
 		self.delay = delay
-		self.objMap = Map(mapFile)
+		self.objMap = objMap
 		self.pacman = Pacman(lives=self.objMap.playerLives, points=self.objMap.playerPoints, state=UAG.PacmanSafe)
 		self.objGraphical = Graphical()
 		self.objUI = objUI
@@ -193,6 +193,7 @@ class PacmanGame():
 			if g.countdownFear:
 				if time.time() > g.countdownFear:
 					g.notAfraidAnymoreBitch()
+		print UAG.GhostSpeed
 
 
 	# ----------------------------------
@@ -307,7 +308,7 @@ class PacmanGame():
 				print "\033[1;31m[PacmanGame] Movement is False: ExitFlag\033[0m"
 				UAG.ExitFlag = 1
 			elif query[1] == "Save":
-				fileName = "%s%sdata%ssave_%s.map" %(rootDir, os.sep, os.sep, time.strftime("%A_%d_%B-%Hh%Mm%S"))
+				fileName = "%s%ssave%ssave_%s.map" %(rootDir, os.sep, os.sep, time.strftime("%A_%d_%B-%Hh%Mm%S"))
 				print "\033[1;33m[PacmanGame] Save game to %s\033[0m" %fileName
 				self.objMap.writePacmanMap(fileName, self.pacman.points, self.pacman.lives)
 			else:
@@ -327,46 +328,3 @@ class PacmanGame():
 			# --- Treat other game parameters independant from movement
 			self.checkCountdowns()
 		return
-
-if __name__=='__main__':
-	print "="*23
-	print "Welcome".center(23)
-	print "To the PacmanPy game !".center(23)
-	print "="*23
-	
-	# --- Get map file
-	rootDir = os.sep.join(os.path.realpath(sys.argv[0]).split(os.sep)[:-2])
-	if len(sys.argv) == 2: mapFile = sys.argv[1]
-	else: mapFile = "%s%s%s" %(rootDir, os.sep, "data/defaultPacmanMap.map")
-	
-	# --- Initiate threads and the wx app
-	lock = threading.Lock()
-	queue = Queue.Queue(5)
-	
-	objApp = wx.PySimpleApp()
-	objUI = UI(1, "Thread-UI", queue, lock, UAG.PacmanDelay)
-	objCatcher = UICatcher(2, "Thread-UICatcher", objApp, objUI)
-	objGhostAI = GhostAI(3, "Thread-Ghost", queue, lock, UAG.GhostSpeed)
-	
-	lThreads = [objUI, objCatcher, objGhostAI]
-	
-	print "[PacmanGame] Initiate threads"
-	for t in lThreads:
-		print "\t%s" %t.threadName
-		t.start()
-	
-	# --- Initiate game
-	game = PacmanGame(mapFile, queue, lock, UAG.PacmanDelay, objUI=objUI, objGhostAI=objGhostAI)
-	game.run()
-	
-	# --- Wait for all threads to terminate before leaving
-	print "[PacmanGame] Wait all threads before leaving"
-	for t in lThreads:
-		print "\t%s" %t.threadName
-		t.join()
-	
-	print "Exit Pacman"
-
-#os.system("gnome-terminal --geometry=60x20+2000+2000")
-
-

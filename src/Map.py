@@ -26,6 +26,7 @@ class Map():
 	# ----------------------------------
 	def __init__(self, mapFile):
 		self.grid = list()
+		self.size = tuple()
 		self.pacmanPosition = list()
 		self.pacmanSpawn = list()
 		self.dGhostPositions = dict()
@@ -134,6 +135,8 @@ class Map():
 				self.playerPoints = int(fh.readline().strip())
 			elif header == "PlayerLives":
 				self.playerLives = int(fh.readline().strip())
+			elif header == "Difficulty":
+				self.difficulty = int(fh.readline().strip())
 			else:
 				print "\033[1;31m[Map] Map loading error: '%s' header unknown." %header
 				sys.exit()
@@ -304,14 +307,10 @@ class Map():
 				currCell = self.getCell(c[0])
 				# check if cell has not already been updated
 				if currCell.pacmanDistance > c[1]:
-					currCell.pacmandDistance = c[1]
+					currCell.setPacmanDistance(c[1])
 					# add all neighbors cells to the tmp CellToUpdate
 					tmp.extend([(self.getNextCell(c[0], m), c[1]+1) for m in currCell.getAuthorizedMoves(UAG.CellCharacterPacman)])
-					print currCell.pacmanDistance
-					print c[1]
-				print len(tmp)
 			lCellToUpdate = tmp
-			lCellToUpdate = []
 
 	def updatePointsLeft(self):
 		"""

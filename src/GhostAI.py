@@ -104,7 +104,7 @@ class GhostAI(threading.Thread):
 	# ----------------------------------
 	# --- Built-in functions
 	# ----------------------------------
-	def __init__(self, threadID, threadName, queue, queueLock, speed):
+	def __init__(self, threadID, threadName, queue, queueLock, speed, nbGhost):
 		# Init thread module in this class
 		threading.Thread.__init__(self)
 		
@@ -118,7 +118,7 @@ class GhostAI(threading.Thread):
 		                         UAG.MovementRight:[UAG.MovementRight, UAG.MovementUp, UAG.MovementDown],
 		                         UAG.MovementLeft:[UAG.MovementLeft, UAG.MovementUp, UAG.MovementDown]}
 		
-		self.dGhosts = self._initGhost(4)
+		self.dGhosts = self._initGhost(nbGhost)
 
 	# ----------------------------------
 	# --- Private functions
@@ -160,7 +160,6 @@ class GhostAI(threading.Thread):
 		'lCellPacmanDistance': list of distance of cell's neighbors.
 		"""
 		predatorDirection = min(lCellPacmanDistance, key=lambda x: x[0])
-		print "[GhostAI] predatorDirection:", predatorDirection
 		# Return predator move
 		if predatorDirection[0] <= UAG.GhostSmell:
 			return predatorDirection[1]
