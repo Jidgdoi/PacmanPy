@@ -19,7 +19,7 @@ from Utility.Colors import *
 
 class Map():
 	"""
-	Object representing the game map, where the pacman, ghost etc. will move.
+	Object representing map.
 	"""
 	# ----------------------------------
 	# --- Built-in functions
@@ -57,7 +57,6 @@ class Map():
 					   UAG.CellTypePath: color()(" ")}
 
 	def __repr__(self):
-#		return '\n'.join( [' '.join( [self.dColor[j.toPrint()] for j in i] ) for i in self.grid] )
 		txt = ''
 		for line in self.grid:
 			previousCellType = False
@@ -77,6 +76,50 @@ class Map():
 	# ----------------------------------
 	# --- PacmanMap functions
 	# ----------------------------------
+	def printMap(self, points, lives):
+		"""
+		Print the map to stdout in terminal format.
+		"""
+		txt = ""
+		# Add map
+		for line in self.grid:
+			previousCellType = False
+			for cell in line:
+				if previousCellType:
+					# Space between 2 walls: set features wall for the space
+					if previousCellType == UAG.CellTypeWall and cell.getType() == UAG.CellTypeWall: txt += self.dColor[UAG.CellTypeWall]
+					# A glass: set both sides of glass as glass features
+					elif previousCellType == UAG.CellTypeGlass or cell.getType() == UAG.CellTypeGlass: txt += self.dColor[UAG.CellTypeGlass]
+					# Just a space
+					else: txt += ' '
+				txt += self.dColor[cell.toPrint()]
+				previousCellType = cell.getType()
+			txt += '\n'
+		
+		# Add score and nb lives left
+		txt += '\n' + ("Score: %s    Lives: %s" %(points, lives)).center(self.size[1]*2-1)
+		print txt
+
+	def printASCIIart(self):
+		"""
+		Print the map to stdout in ASCII-art format.
+		"""
+		txt = ''
+		for line in self.grid:
+			previousCellType = False
+			for cell in line:
+				if previousCellType:
+					# Space between 2 walls: set features wall for the space
+					if previousCellType == UAG.CellTypeWall and cell.getType() == UAG.CellTypeWall: txt += self.dColor[UAG.CellTypeWall]
+					# A glass: set both sides of glass as glass features
+					elif previousCellType == UAG.CellTypeGlass or cell.getType() == UAG.CellTypeGlass: txt += self.dColor[UAG.CellTypeGlass]
+					# Just a space
+					else: txt += ' '
+				txt += self.dColor[cell.toPrint()]
+				previousCellType = cell.getType()
+			txt += '\n'
+		print txt
+
 	def decodeCell(self, line, col, code):
 		"""
 		Decode a 3-characters string encoding a cell's description.

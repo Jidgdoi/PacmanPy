@@ -193,8 +193,6 @@ class PacmanGame():
 			if g.countdownFear:
 				if time.time() > g.countdownFear:
 					g.notAfraidAnymoreBitch()
-		print UAG.GhostSpeed
-
 
 	# ----------------------------------
 	# --- Movement functions
@@ -320,8 +318,8 @@ class PacmanGame():
 					c = 0
 #					self.threadLock.acquire()
 					self.printEvent(eventText)
-					print self.objMap
-					print "Lives left: %s\nPoints: %s" %(self.pacman.lives, self.pacman.points)
+					self.objMap.printMap(self.pacman.points, self.pacman.lives)
+					if eventText == UAG.GhostKilledYou: time.sleep(UAG.EventTextTime)
 #					self.threadLock.release()
 				c += 1
 			

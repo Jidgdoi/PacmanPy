@@ -43,17 +43,12 @@ def askQuestion(question, lChoices):
 	
 	if choice.lower() == 'q':
 		sys.exit(0)
-	try:
-		choice = int(choice)
-	except ValueError:
+	
+	if choice not in map(str,range(1,len(lChoices)+1)):
 		print "Your choice \"%s\" doesn't exist." %choice
 		return askQuestion(question, lChoices)
 	
-	if choice > len(lChoices):
-		print "Your choice \"%s\" doesn't exist." %choice
-		return askQuestion(question, lChoices)
-	
-	return choice -1
+	return int(choice) -1
 
 def setDifficulty(choice):
 	"""
@@ -77,10 +72,11 @@ def setDifficulty(choice):
 
 def listMap(myPath):
 	"""
-	List the available maps in the given directory.
+	Ask the user to pick a map, and return the path to this file.
 	"""
 	# Get files
 	lFiles = [f for f in os.listdir(myPath) if os.path.splitext(f)[1] == '.map']
+	print lFiles
 	
 	if len(lFiles) == 0:
 		print "No map to load."
@@ -88,14 +84,11 @@ def listMap(myPath):
 	
 	# Ask user
 	choice = askQuestion("Choose file:", lFiles)
-	try:
-		return ''.join([myPath, lFiles[int(choice)-1]])
-	except IndexError, ValueError:
-		print "Your choice \"%s\" doesn't exist." %choice
-		return False
+	print choice
+	return ''.join([myPath, lFiles[choice]])
 
 
-def terminalView():
+def terminalVersion():
 	"""
 	Game in terminal.
 	"""
@@ -124,7 +117,7 @@ def terminalView():
 	objApp = wx.PySimpleApp()
 	objUI = UI(1, "Thread-UI", queue, lock, UAG.PacmanDelay)
 	objCatcher = UICatcher(2, "Thread-UICatcher", objApp, objUI)
-	objGhostAI = GhostAI(3, "Thread-Ghost", queue, lock, UAG.GhostSpeed)
+	objGhostAI = GhostAI(3, "Thread-Ghost", queue, lock, UAG.GhostSpeed, len(objMap.dGhostSpawns))
 	
 	lThreads = [objUI, objCatcher, objGhostAI]
 	
@@ -147,13 +140,13 @@ def asciiArtVersion():
 	"""
 	Game in ASCII art.
 	"""
-	print "Not available."
+	print "ASCII-art version is currently not available."
 
-def graphicalView():
+def graphicalVersion():
 	"""
 	Game in a window.
 	"""
-	print "Not available."
+	print "Window version is currently not available."
 
 
 if __name__=='__main__':
@@ -170,15 +163,15 @@ if __name__=='__main__':
 	
 	# ===========
 	# === Select the graphical output version
-	gameVersion = askQuestion("Select the graphical output version you want to play with:", ["Terminal version", "Graphical version"])
+	gameVersion = askQuestion("Select the graphical output version you want to play with:", ["Terminal version", "ASCII-art version", "Graphical version"])
 	
 	mapPath = getMapPath()
 	if gameVersion == 0:
-		terminalView()
+		terminalVersion()
 	elif gameVersion == 1:
 		asciiArtVersion()
 	elif gameVersion == 2:
-		graphicalView()
+		graphicalVersion()
 	print "Exit Pacman"
 
 #os.system("gnome-terminal --geometry=60x20+2000+2000")
