@@ -5,6 +5,20 @@
 
 from wx import WXK_UP, WXK_DOWN, WXK_RIGHT, WXK_LEFT
 
+
+######################
+# Usefull functions
+######################
+def getKey(d, value):
+	"""
+	Return the list of keys corresponding to the value 'value'.
+	If no key correspond to the value, return an empty list.
+	'd': a dictionary.
+	'value': one value or a list of value.
+	"""
+	if isinstance(value, (list,tuple,set)): return [ k for k,v in d.iteritems() if v in value ]
+	return [ k for k,v in d.iteritems() if v == value ]
+
 ######################
 # GLOBAL VARIABLES
 ######################

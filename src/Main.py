@@ -17,8 +17,7 @@ from GhostAI import GhostAI
 from Graphical import Graphical
 from Pacman import Pacman, PacmanGame
 
-from Utility.MyToolbox import MyToolbox as MTB
-import Utility.Colors as txt
+import Colors as txt
 
 # =======================
 #    ===   Main   ===

@@ -16,8 +16,7 @@ from UI import UI, UICatcher
 from GhostAI import GhostAI
 from Graphical import Graphical
 
-from Utility.MyToolbox import MyToolbox as MTB
-from Utility.Colors import *
+from Colors import *
 
 
 ##########################################

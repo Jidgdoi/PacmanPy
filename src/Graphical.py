@@ -8,8 +8,7 @@ import wx
 
 from UtilsAndGlobal import *
 
-from Utility.MyToolbox import MyToolbox as MTB
-from Utility.Colors import *
+from Colors import *
 
 # =================================
 #    ===   Class Graphical   ===

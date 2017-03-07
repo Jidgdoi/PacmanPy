@@ -10,8 +10,7 @@ import UtilsAndGlobal as UAG
 from Cell import Cell
 
 from datetime import datetime
-from Utility.MyToolbox import MyToolbox as MTB
-from Utility.Colors import *
+from Colors import *
 
 # ===========================
 #    ===   Class Map   ===

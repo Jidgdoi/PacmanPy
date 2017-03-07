@@ -7,8 +7,7 @@ import os,sys
 
 import UtilsAndGlobal as UAG
 
-from Utility.MyToolbox import MyToolbox as MTB
-from Utility.Colors import *
+from Colors import *
 
 # ============================
 #    ===   Class Cell   ===
@@ -32,7 +31,7 @@ class Cell():
 		self.pacmanDistance = UAG.CellDefaultPacmanDist
 
 	def __repr__(self):
-		t, i, c = MTB.getKey(vars(UAG), [self.type, self.item, self.getCharactersType(True)[0]])
+		t, i, c = UAG.getKey(vars(UAG), [self.type, self.item, self.getCharactersType(True)[0]])
 		return "(%s,%s,%s)" %(t, i, c)
 
 	# ----------------------------------
